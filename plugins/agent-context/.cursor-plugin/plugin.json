@@ -1,0 +1,16 @@
+{
+  "name": "agent-context",
+  "displayName": "Agent Context",
+  "version": "0.1.1",
+  "description": "Auto-maintained project context, progress tracking, and cross-model review workflow for Cursor.",
+  "author": {
+    "name": "thanezh"
+  },
+  "license": "MIT",
+  "keywords": ["cursor", "plugin", "context", "progress", "review", "agentic"],
+  "logo": "assets/logo.svg",
+  "rules": "rules/",
+  "skills": "skills/",
+  "commands": "commands/",
+  "hooks": "hooks/hooks.json"
+}

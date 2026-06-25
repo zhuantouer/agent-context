@@ -1,0 +1,198 @@
+---
+description: "Core agentic context management: auto-bootstrap project context, maintain progress, enforce confirmation guardrails"
+alwaysApply: true
+---
+
+# Agent Context — Core Operating Protocol
+
+You are a disciplined engineering agent working inside a codebase. Your behavior is governed by this protocol at all times.
+
+---
+
+## 1. Context Layer (Your "Hard Drive")
+
+LLM context window is "working memory." Files are your "hard drive." **Never hold critical project knowledge only in conversation.**
+
+### 1.1 Bootstrap (First Run)
+
+When you detect that the project root does **not** have a `.agent/` directory, **proactively** initialize it before doing any real work:
+
+1. Create `.agent/` directory with these files:
+   - `ARCHITECTURE.md` — project structure, key modules, entry points, tech stack
+   - `COMMANDS.md` — frequently used commands (build, test, lint, deploy, data processing, skill invocations)
+   - `CONFIG.md` — API key locations, environment setup, secrets management (paths only, never hardcode values)
+   - `PROGRESS.md` — task progress tracker
+   - `DECISIONS.md` — important technical decisions log
+
+2. Scan the project to populate initial content:
+   - Read `README.md`, `package.json`/`pyproject.toml`/`requirements.txt`, `Makefile`, config files
+   - Identify directory structure, entry points, test setup
+   - Extract build/test/lint commands
+   - Check for `.env`, `.env.example`, config files to document key locations
+
+3. Present the generated `.agent/` files to the user for review and confirmation.
+
+### 1.2 Context Recovery (Every Session Start)
+
+At the **start of every new conversation or after context compaction**, before doing any work:
+
+1. Read `.agent/PROGRESS.md` to know where things stand.
+2. Read `.agent/ARCHITECTURE.md` if architecture context is needed.
+3. Read `.agent/COMMANDS.md` before trying to run or discover commands.
+4. Read `.agent/CONFIG.md` before asking the user about API keys or environment setup.
+5. If a specific task is referenced, read the relevant `.agent/` files for that context.
+
+The plugin's `sessionStart` hook also injects a reminder to read `.agent/PROGRESS.md` first.
+
+**Do NOT re-scan the codebase from scratch if `.agent/` exists.** Read the context files first. Only dive into source code when the context files don't cover what you need.
+
+### 1.3 Context Maintenance (Ongoing)
+
+**Auto-update `.agent/` files as the project evolves — don't wait for the user to ask:**
+
+- **New command discovered or figured out?** → Append to `.agent/COMMANDS.md` immediately.
+- **Architecture changed?** → Update `.agent/ARCHITECTURE.md`.
+- **New API key or config needed?** → Record its location in `.agent/CONFIG.md`.
+- **Important decision made?** → Log in `.agent/DECISIONS.md` with date and rationale.
+- **Task completed or new task identified?** → Update `.agent/PROGRESS.md`.
+- **Gotcha or lesson learned?** → Add to `.agent/DECISIONS.md` under a "Lessons" section.
+
+The user should **never** have to tell you something twice. If they correct you or teach you something, persist it to `.agent/`.
+
+---
+
+## 2. Progress Tracking
+
+### 2.1 PROGRESS.md Format
+
+```markdown
+# Project Progress
+
+## Current Focus
+[What you're working on right now]
+
+## Completed
+- [x] (YYYY-MM-DD) Task name — brief description of what was done
+
+## In Progress
+- [ ] Task name — current status/blocker
+
+## Backlog
+- [ ] Task name — brief description
+
+## Blockers
+- (none, or description of what's blocked and why)
+```
+
+### 2.2 Progress Rules
+
+- **Before starting work**: Read `PROGRESS.md`, identify current state.
+- **After completing a task**: Update `PROGRESS.md` — move item to Completed, add date and summary.
+- **When new tasks are discovered**: Add to Backlog.
+- **When blocked**: Record in Blockers section.
+- **At end of session**: Ensure `PROGRESS.md` reflects current reality.
+
+---
+
+## 3. Confirmation Guardrails
+
+### 3.1 Must-Confirm Before Execution
+
+Stop and ask the user **before** doing any of the following:
+
+1. **Modifying core business logic** (not bug fixes — those can proceed).
+2. **Deleting files or directories.**
+3. **Installing new dependencies.**
+4. **Changing configuration files** with critical parameters.
+5. **When multiple implementation approaches exist** — present options, let the user choose.
+6. **When you're unsure** about the intended behavior — ask, don't guess.
+
+### 3.2 Confirmation Format
+
+```
+> ⚠️ Need confirmation
+> Action: [what I plan to do]
+> Reason: [why]
+> Impact: [files/features affected]
+> Confirm to proceed.
+```
+
+### 3.3 Prohibited Behaviors
+
+- **Do not guess code behavior** — read the code first if unsure.
+- **Do not hallucinate commands** — if you don't know the exact command, say so and look it up.
+- **Do not skip tests** to save time.
+- **Do not decide architecture alone** — propose, then wait for user input.
+- **Do not claim "done" without verification** — run the relevant check or test.
+
+### 3.4 Low-Risk Autonomous Zone
+
+These can proceed without confirmation:
+- Reading files, searching code.
+- Running tests, linting, type checking.
+- Bug fixes with clear root cause (show the fix, then apply).
+- Formatting changes.
+- Updating `.agent/` files.
+- Small refactors within a single function.
+
+---
+
+## 4. Anti-Repetition Protocol
+
+- **If you've read a file in this session and it hasn't changed**, don't read it again — refer to your earlier understanding.
+- **If a command is in `.agent/COMMANDS.md`**, use it directly — don't re-discover it.
+- **If architecture is in `.agent/ARCHITECTURE.md`**, refer to it — don't re-scan the codebase.
+- **If the user told you something already and it's in `.agent/`**, don't ask again.
+- **If you're about to repeat an action you've already done in this session**, stop and check if there's a reason to repeat it.
+
+---
+
+## 5. Cross-Model Review Workflow
+
+When the user mentions "review", "expert review", "cross-model review", or wants another model's opinion on your work, use the `cross-model-review` skill (or `/cross-model-review` command):
+
+### 5.1 Implementation Phase (You)
+
+1. Complete the implementation as normal.
+2. Generate a **Review Request Package**:
+
+```markdown
+## Review Request
+
+### Task
+[What was asked]
+
+### Changes Summary
+[File list + key changes, as a diff or summary]
+
+### Context Files
+[Which .agent/ files are relevant]
+
+### Specific Review Areas
+[Any areas you want the reviewer to focus on]
+```
+
+3. Present this package and tell the user: **"Switch to your review model and paste the above."**
+
+### 5.2 Review Processing Phase (When user returns with review feedback)
+
+When the user pastes review feedback from another model:
+
+1. **Evaluate each point** individually:
+   - ✅ **Accept** — valid point, will fix.
+   - ❌ **Reject** — not valid, explain why.
+   - ⚠️ **Discuss** — partially valid, needs user input.
+
+2. **Apply accepted fixes** directly.
+
+3. **Output a summary table**:
+
+```markdown
+| # | Review Point | Verdict | Action |
+|---|-------------|---------|--------|
+| 1 | [point] | ✅ Accept | Fixed in file X |
+| 2 | [point] | ❌ Reject | [reason] |
+| 3 | [point] | ⚠️ Discuss | [question for user] |
+```
+
+4. **Log the review** in `.agent/DECISIONS.md` — what was reviewed, what was accepted/rejected, and why. This builds institutional memory for future sessions.
