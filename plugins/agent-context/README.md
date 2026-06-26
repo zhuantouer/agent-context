@@ -7,18 +7,16 @@ Cursor plugin that auto-maintains a `.agent/` directory in your project for pers
 | Type | Items |
 |------|-------|
 | Rules | `agent-context-core.mdc` (`alwaysApply: true`) |
-| Skills | `bootstrap-context`, `sync-context`, `update-progress`, `cross-model-review` |
-| Commands | `/bootstrap-context`, `/sync-context`, `/status`, `/update-progress`, `/cross-model-review` |
+| Skills | `bootstrap-context`, `sync-context`, `update-progress`, `cross-model-review` — auto-invoked or via `/skill-name` |
 | Hooks | `sessionStart` — injects `.agent/` recovery reminder via `additional_context` |
 
 ## Local testing
 
 ```bash
-ln -sf "$(pwd)" ~/.cursor/plugins/local/agent-context
-# or copy: cp -r plugins/agent-context ~/.cursor/plugins/local/agent-context
+./scripts/install-local.sh   # from repo root — copies to ~/.cursor/plugins/local/
 ```
 
-Then **Developer: Reload Window** in Cursor.
+Do **not** symlink from outside `~/.cursor/plugins/local/`; Cursor rejects it. Then **Developer: Reload Window**.
 
 ## Validation
 

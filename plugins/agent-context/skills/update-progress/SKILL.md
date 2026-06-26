@@ -20,7 +20,9 @@ Read `.agent/PROGRESS.md` to see current state.
 
 ### Step 2: Determine updates needed
 
-Ask yourself:
+If the user only wants a status summary (e.g. "what's the status?", "where are we?") and nothing changed since the last update, **read and report only** — do not rewrite `PROGRESS.md`.
+
+Otherwise ask yourself:
 - Did I just complete something? → Move from In Progress to Completed.
 - Am I starting something new? → Add to In Progress, set as Current Focus.
 - Did I discover a new task? → Add to Backlog.

@@ -1,7 +1,7 @@
 {
   "name": "agent-context",
   "displayName": "Agent Context",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Auto-maintained project context, progress tracking, and cross-model review workflow for Cursor.",
   "author": {
     "name": "thanezh"
@@ -11,6 +11,5 @@
   "logo": "assets/logo.svg",
   "rules": "rules/",
   "skills": "skills/",
-  "commands": "commands/",
   "hooks": "hooks/hooks.json"
 }

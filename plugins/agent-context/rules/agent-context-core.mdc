@@ -149,50 +149,18 @@ These can proceed without confirmation:
 
 ## 5. Cross-Model Review Workflow
 
-When the user mentions "review", "expert review", "cross-model review", or wants another model's opinion on your work, use the `cross-model-review` skill (or `/cross-model-review` command):
+When the user mentions "review", "expert review", "cross-model review", or wants another model's opinion, use the `cross-model-review` skill (or `/cross-model-review`).
 
-### 5.1 Implementation Phase (You)
+**In-chat only — no subagent.** Reuse this conversation's context. Do not spawn Task/subagent reviewers (avoids duplicate token spend from fat prompts + repo re-exploration).
 
-1. Complete the implementation as normal.
-2. Generate a **Review Request Package**:
+### 5.1 Automated in-chat review
 
-```markdown
-## Review Request
+1. **Cross-model (optional):** if user wants a different model, ask them to switch the input-box model and re-run `/cross-model-review` — do not spawn a subagent.
+2. **Minimal reads:** use chat history first; only `git diff` and `.agent/` files not already in context.
+3. **Review:** output findings table + verdict in this chat.
+4. **Process:** Accept → fix | Reject → explain | Discuss → ask user.
+5. **Log** in `.agent/DECISIONS.md`.
 
-### Task
-[What was asked]
+### 5.2 Manual external review (fallback only)
 
-### Changes Summary
-[File list + key changes, as a diff or summary]
-
-### Context Files
-[Which .agent/ files are relevant]
-
-### Specific Review Areas
-[Any areas you want the reviewer to focus on]
-```
-
-3. Present this package and tell the user: **"Switch to your review model and paste the above."**
-
-### 5.2 Review Processing Phase (When user returns with review feedback)
-
-When the user pastes review feedback from another model:
-
-1. **Evaluate each point** individually:
-   - ✅ **Accept** — valid point, will fix.
-   - ❌ **Reject** — not valid, explain why.
-   - ⚠️ **Discuss** — partially valid, needs user input.
-
-2. **Apply accepted fixes** directly.
-
-3. **Output a summary table**:
-
-```markdown
-| # | Review Point | Verdict | Action |
-|---|-------------|---------|--------|
-| 1 | [point] | ✅ Accept | Fixed in file X |
-| 2 | [point] | ❌ Reject | [reason] |
-| 3 | [point] | ⚠️ Discuss | [question for user] |
-```
-
-4. **Log the review** in `.agent/DECISIONS.md` — what was reviewed, what was accepted/rejected, and why. This builds institutional memory for future sessions.
+When the user explicitly wants an app outside Cursor: generate a **lean** review request (pointers, not file dumps), user pastes feedback back, then process and log.
