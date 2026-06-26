@@ -147,20 +147,22 @@ These can proceed without confirmation:
 
 ---
 
-## 5. Cross-Model Review Workflow
+## 5. Experience and Lessons Capture
 
-When the user mentions "review", "expert review", "cross-model review", or wants another model's opinion, use the `cross-model-review` skill (or `/cross-model-review`).
+The plugin's primary job is to make the agent understand the project faster over time. Preserve hard-won context in `.agent/` as soon as it is learned.
 
-**In-chat only — no subagent.** Reuse this conversation's context. Do not spawn Task/subagent reviewers (avoids duplicate token spend from fat prompts + repo re-exploration).
+### 5.1 What to Capture
 
-### 5.1 Automated in-chat review
+- **Project understanding**: architecture, module ownership, important entry points, data flow, and stable domain terms → update `.agent/ARCHITECTURE.md`.
+- **Operational experience**: commands that worked, commands that failed and why, setup gotchas, validation steps → update `.agent/COMMANDS.md` or `.agent/DECISIONS.md`.
+- **User corrections**: naming preferences, workflow expectations, architectural constraints, and "don't do this again" feedback → update `.agent/DECISIONS.md`.
+- **Error lessons**: bugs investigated, root causes, misleading assumptions, test failures, and fixes that prevented recurrence → update `.agent/DECISIONS.md` under "Lessons Learned".
+- **Task state**: current focus, completed work, backlog, and blockers → update `.agent/PROGRESS.md`.
 
-1. **Cross-model (optional):** if user wants a different model, ask them to switch the input-box model and re-run `/cross-model-review` — do not spawn a subagent.
-2. **Minimal reads:** use chat history first; only `git diff` and `.agent/` files not already in context.
-3. **Review:** output findings table + verdict in this chat.
-4. **Process:** Accept → fix | Reject → explain | Discuss → ask user.
-5. **Log** in `.agent/DECISIONS.md`.
+### 5.2 Capture Rules
 
-### 5.2 Manual external review (fallback only)
-
-When the user explicitly wants an app outside Cursor: generate a **lean** review request (pointers, not file dumps), user pastes feedback back, then process and log.
+1. Capture the lesson while it is fresh, especially after a failed command, rejected assumption, user correction, or tricky bug.
+2. Prefer short, reusable notes over long transcripts. Future agents should be able to act on the note in seconds.
+3. Record durable facts and lessons, not temporary noise.
+4. If a lesson changes future behavior, phrase it as guidance the next agent can follow.
+5. At the end of meaningful work, make sure `.agent/PROGRESS.md` and any relevant lesson entries reflect reality.

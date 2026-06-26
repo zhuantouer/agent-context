@@ -1,13 +1,13 @@
 # Agent Context
 
-Cursor plugin that auto-maintains a `.agent/` directory in your project for persistent context, progress tracking, and cross-model review.
+Cursor plugin that auto-maintains a `.agent/` directory in your project for persistent context, progress tracking, and lessons learned.
 
 ## Components
 
 | Type | Items |
 |------|-------|
 | Rules | `agent-context-core.mdc` (`alwaysApply: true`) |
-| Skills | `bootstrap-context`, `sync-context`, `update-progress`, `cross-model-review` — auto-invoked or via `/skill-name` |
+| Skills | `bootstrap-context`, `sync-context`, `update-progress` — auto-invoked or via `/skill-name` |
 | Hooks | `sessionStart` — injects `.agent/` recovery reminder via `additional_context` |
 
 ## Local testing

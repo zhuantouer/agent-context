@@ -12,7 +12,7 @@
     {
       "name": "agent-context",
       "source": "./plugins/agent-context",
-      "description": "Auto-maintained project context, progress tracking, and cross-model review workflow"
+      "description": "Auto-maintained project context, progress tracking, and lessons learned"
     }
   ]
 }

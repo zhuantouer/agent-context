@@ -11,7 +11,7 @@ A lightweight [Cursor plugin](https://cursor.com/cn/docs/plugins) that gives you
 | Commands re-discovered through trial & error | `.agent/COMMANDS.md` caches all known commands |
 | No idea what's done vs. what's left | `.agent/PROGRESS.md` tracks everything, auto-updated |
 | Agent hallucinates or free-wheels | Built-in confirmation guardrails |
-| Cross-model review wastes tokens on subagent re-exploration | `/cross-model-review` reviews **in-chat**, reusing conversation + `.agent/` context |
+| Hard-won lessons disappear after the chat | `.agent/DECISIONS.md` captures project decisions, user corrections, and mistakes to avoid |
 
 ## How it works
 
@@ -33,7 +33,7 @@ The plugin installs **rules**, **skills**, and a **sessionStart hook** that make
 3. **Auto-update** context files as the project evolves
 4. **Track progress** in `PROGRESS.md` after each task
 5. **Confirm before** risky actions (core logic changes, deletions, new deps)
-6. **Facilitate cross-model review** in the current chat (no subagent) with a structured findings format
+6. **Capture experience and lessons** so future agents avoid repeating mistakes
 
 ## Installation
 
@@ -76,26 +76,12 @@ Skills follow the [Agent Skills](https://cursor.com/cn/docs/skills) format (`ski
 | `bootstrap-context` | First run, or when `.agent/` is missing | `/bootstrap-context` |
 | `sync-context` | After significant project changes | `/sync-context` |
 | `update-progress` | After completing a task; status queries | `/update-progress` |
-| `cross-model-review` | Review keywords in chat (via core rule) | `/cross-model-review` only (`disable-model-invocation: true`) |
-
-### `/cross-model-review` usage
-
-**No subagent** — reviews in the current chat to avoid duplicate token spend.
-
-```
-/cross-model-review
-```
-
-- Reuses conversation context + minimal `.agent/` / `git diff` reads
-- Outputs findings → applies fixes → logs to `.agent/DECISIONS.md`
-
-**True cross-model:** switch the input-box model first, then run `/cross-model-review` again in the same chat.
 
 ## Rules
 
 | Rule | Scope | Description |
 |------|-------|-------------|
-| `agent-context-core.mdc` | `alwaysApply: true` | Core operating protocol — context management, progress tracking, confirmation guardrails, anti-repetition, cross-model review workflow |
+| `agent-context-core.mdc` | `alwaysApply: true` | Core operating protocol — context management, progress tracking, confirmation guardrails, anti-repetition, and lessons capture |
 
 See [Cursor Rules docs](https://cursor.com/cn/docs/rules) for how `alwaysApply` rules are injected into every session.
 
@@ -116,7 +102,7 @@ node scripts/validate-template.mjs
 Inspired by [AgenticMetaEngineering](https://github.com/anthropic/AgenticMetaEngineering) and [Superpowers](https://github.com/obra/superpowers), but **radically simplified**:
 
 - **No 8-stage workflow.** No gate audits. No mandatory worktrees.
-- **No 20+ plugins.** One plugin, one rule file, four skills.
+- **No 20+ plugins.** One plugin, one rule file, three skills.
 - **No per-requirement directory scaffolding.** Just `.agent/`.
 - **The agent maintains the context, not you.** You just code.
 
