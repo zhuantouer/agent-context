@@ -33,15 +33,35 @@ fi
 AGENT_DIR="${PROJECT_DIR}/.agent"
 
 if [ -d "$AGENT_DIR" ]; then
-  message=$(cat <<EOF
-[Agent Context] .agent/ detected at ${AGENT_DIR}. Read these files before doing work:
-- .agent/PROGRESS.md (start here — current focus and blockers)
-- .agent/ARCHITECTURE.md (structure and entry points)
-- .agent/COMMANDS.md (build, test, lint commands)
-- .agent/CONFIG.md (env var and API key locations — paths only)
-- .agent/DECISIONS.md (technical decisions and lessons)
+  HANDOFF_PATH="${AGENT_DIR}/HANDOFF.md"
+  if [ -s "$HANDOFF_PATH" ]; then
+    handoff=$(python3 - "$HANDOFF_PATH" <<'PY'
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+text = path.read_text(encoding="utf-8", errors="replace").strip()
+max_chars = 4000
+if len(text) > max_chars:
+    text = text[:max_chars].rstrip() + "\n\n[truncated — read .agent/HANDOFF.md for the full handoff]"
+print(text)
+PY
+)
+    message=$(cat <<EOF
+[Agent Context] .agent/ detected at ${AGENT_DIR}. Minimal handoff from .agent/HANDOFF.md:
+
+${handoff}
+
+Resume from the handoff first. Read .agent/PROGRESS.md for project-level status if needed; load other .agent files on demand.
 EOF
 )
+  else
+    message=$(cat <<EOF
+[Agent Context] .agent/ detected at ${AGENT_DIR}, but .agent/HANDOFF.md is missing or empty.
+Read .agent/PROGRESS.md before doing work. Create or refresh .agent/HANDOFF.md when starting a meaningful task. Load other .agent files on demand.
+EOF
+)
+  fi
 else
   message=$(cat <<EOF
 [Agent Context] No .agent/ directory in ${PROJECT_DIR}.

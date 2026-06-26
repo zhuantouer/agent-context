@@ -5,6 +5,12 @@
       {
         "command": "scripts/session-start.sh"
       }
+    ],
+    "stop": [
+      {
+        "command": "scripts/stop-handoff-reminder.sh",
+        "loop_limit": 1
+      }
     ]
   }
 }

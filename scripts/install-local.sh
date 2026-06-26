@@ -14,7 +14,7 @@ PLUGIN_DEST="${HOME}/.cursor/plugins/local/agent-context"
 mkdir -p "${HOME}/.cursor/plugins/local"
 rm -rf "${PLUGIN_DEST}"
 cp -R "${PLUGIN_SRC}" "${PLUGIN_DEST}"
-chmod +x "${PLUGIN_DEST}/hooks/scripts/session-start.sh"
+chmod +x "${PLUGIN_DEST}"/hooks/scripts/*.sh
 
 echo "Installed agent-context to ${PLUGIN_DEST}"
 echo "Next: Developer → Reload Window in Cursor"

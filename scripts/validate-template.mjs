@@ -155,6 +155,25 @@ async function validatePlugin(pluginDir, pluginName) {
     }
   }
 
+  // Check agents (subagents)
+  const agentsDir = path.join(pluginDir, "agents");
+  if (await pathExists(agentsDir)) {
+    const files = await fs.readdir(agentsDir);
+    for (const file of files) {
+      if (file.endsWith(".md")) {
+        const content = await fs.readFile(path.join(agentsDir, file), "utf8");
+        if (!content.includes("name:") || !content.includes("description:")) {
+          addError(`Agent '${file}': missing frontmatter 'name' or 'description'`);
+        }
+        const baseName = file.replace(/\.md$/, "");
+        const nameMatch = content.match(/^name:\s*([^\n]+)/m);
+        if (nameMatch && nameMatch[1].trim() !== baseName) {
+          addError(`Agent '${file}': frontmatter name '${nameMatch[1].trim()}' must match filename`);
+        }
+      }
+    }
+  }
+
   // Check hooks
   const hooksJsonPath = path.join(pluginDir, "hooks", "hooks.json");
   if (await pathExists(hooksJsonPath)) {

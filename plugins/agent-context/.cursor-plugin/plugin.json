@@ -2,12 +2,12 @@
   "name": "agent-context",
   "displayName": "Agent Context",
   "version": "0.1.2",
-  "description": "Auto-maintained project context, progress tracking, and lessons learned for Cursor.",
+  "description": "Auto-maintained project context, task handoff, validation habits, and lessons learned for Cursor.",
   "author": {
     "name": "thanezh"
   },
   "license": "MIT",
-  "keywords": ["cursor", "plugin", "context", "memory", "progress", "lessons", "agentic"],
+  "keywords": ["cursor", "plugin", "context", "memory", "handoff", "progress", "validation", "lessons", "agentic"],
   "logo": "assets/logo.svg",
   "rules": "rules/",
   "skills": "skills/",
