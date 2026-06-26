@@ -1,37 +1,27 @@
 ---
 name: update-progress
-description: Update .agent/PROGRESS.md with current task status. Use after completing a task, starting a new task, or when the user asks for a status check.
+description: Update .agent/PROGRESS.md as a rolling project ledger. Use when starting or completing work, changing blockers, discovering backlog, syncing context, or answering status questions.
 ---
 
 # Update Progress
 
-## When to use
+## Use When
 
 - After completing a task or milestone
 - When starting a new task
-- When the user asks "what's the status?" or "where are we?"
-- User runs `/update-progress`
+- When blockers, backlog, or current focus change
+- When context was just synced
+- When the user asks for status
 
 ## Instructions
 
-### Step 1: Read current state
+1. Read `.agent/PROGRESS.md`.
+2. If the user only wants status and nothing changed, report only; do not rewrite.
+3. Otherwise rewrite `.agent/PROGRESS.md` using the template below.
+4. Keep recent detail. Compact old completed work into milestone summaries instead of growing forever.
+5. Refresh `.agent/HANDOFF.md` too if the active task's next action, validation, touched files, or blockers changed.
 
-Read `.agent/PROGRESS.md` to see current state.
-
-### Step 2: Determine updates needed
-
-If the user only wants a status summary (e.g. "what's the status?", "where are we?") and nothing changed since the last update, **read and report only** — do not rewrite `PROGRESS.md`.
-
-Otherwise ask yourself:
-- Did I just complete something? → Move from In Progress to Completed.
-- Am I starting something new? → Add to In Progress, set as Current Focus.
-- Did I discover a new task? → Add to Backlog.
-- Am I blocked on something? → Add/update Blockers.
-- Did I resolve a blocker? → Remove from Blockers.
-
-### Step 3: Update PROGRESS.md
-
-Rewrite `.agent/PROGRESS.md` with updated content following the standard format:
+## Template
 
 ```markdown
 # Project Progress
@@ -42,6 +32,9 @@ Rewrite `.agent/PROGRESS.md` with updated content following the standard format:
 ## Completed
 - [x] (YYYY-MM-DD) Task — brief description
 
+## Older Milestones
+- YYYY-MM or YYYY QN: Summary of older completed work
+
 ## In Progress
 - [ ] Task — current status
 
@@ -50,20 +43,17 @@ Rewrite `.agent/PROGRESS.md` with updated content following the standard format:
 
 ## Blockers
 - (none, or description)
+
+## Context Freshness
+- Last sync: YYYY-MM-DD
+- Source revision: [git commit/branch if available, or "(unknown)"]
 ```
 
-### Step 4: Report to user
+## Rules
 
-Tell the user:
-- What was just completed (if applicable)
-- What's currently in progress
-- What's blocked (if anything)
-- What's next in the backlog
-
-### Important
-
-- **Use real dates** — get the current date from the system.
-- **Keep descriptions concise** — one line per item.
-- **Be honest about blockers** — don't hide problems.
-- **Current Focus should be singular** — one thing at a time.
-- **Don't delete completed items** — they're a record of progress.
+- Use real dates from the system.
+- Keep `Current Focus` singular.
+- Keep descriptions one line.
+- Put tactical next action, touched files, and latest validation in `.agent/HANDOFF.md`, not here.
+- Do not hide blockers.
+- Report current focus, completed change, blockers, and next backlog item when relevant.

@@ -1,49 +1,79 @@
 ---
 name: bootstrap-context
-description: Initialize .agent/ context directory for a new project. Run automatically on first interaction when .agent/ is missing, or manually via /bootstrap-context.
+description: Create concise .agent/ project memory for a repository. Use when .agent/ is missing, when the user asks to initialize or refresh context, or via /bootstrap-context.
 ---
 
 # Bootstrap Project Context
 
-## When to use
+## Use When
 
-- Project root does not have a `.agent/` directory
-- User explicitly asks to initialize or refresh project context
-- User runs `/bootstrap-context`
+- Project root has no `.agent/`
+- The user asks to initialize or refresh project context
+- The user runs `/bootstrap-context`
 
 ## Instructions
 
-### Step 1: Detect existing context
+1. If `.agent/` exists, read it and ask whether to refresh or keep it.
+2. Scan only key project files; do not read the whole codebase.
+3. Create or refresh the `.agent/` files below with concise facts.
+4. Report detected stack, generated files, and gaps the user should review.
+5. Tell the user: "From now on, I'll auto-maintain these files. You don't need to manage them manually."
 
-Check if `.agent/` exists in project root. If it does, read all files and ask the user whether they want to refresh or keep existing context.
+## Scan Inputs
 
-### Step 2: Scan project structure
+Read if present:
 
-Read these files if they exist (do NOT read every file — only the key entry points):
+- `README.md`
+- `package.json`, `pyproject.toml`, `requirements.txt`, `Cargo.toml`, `go.mod`
+- `Makefile`, `justfile`
+- `.env.example`, config templates
+- `docker-compose.yml`, `Dockerfile`
+- `.cursor/rules/*`
+- `CLAUDE.md`, `AGENTS.md`
 
-- `README.md` — project description, setup instructions
-- `package.json` / `pyproject.toml` / `requirements.txt` / `Cargo.toml` / `go.mod` — dependencies, scripts, metadata
-- `Makefile` / `justfile` — task runners
-- `.env.example` / config templates — environment variables needed
-- `docker-compose.yml` / `Dockerfile` — containerization setup
-- `.cursor/rules/*` — existing Cursor rules
-- Any `CLAUDE.md` or `AGENTS.md` — existing AI agent instructions
+Prefer file-search tools, `rg`, or portable git commands such as `git ls-files`. Avoid broad scans and Unix-only `find ... | head ...` examples.
 
-Run these shell commands to understand structure:
-- `find . -maxdepth 2 \( -name "*.py" -o -name "*.ts" -o -name "*.js" -o -name "*.go" -o -name "*.rs" \) -type f | head -40` — identify main source files (parentheses group `-o` predicates so `-maxdepth` applies to all)
-- `ls -la` — root directory listing
-- `git remote -v` — git remote info (if applicable)
+## Files
 
-### Step 3: Generate context files
+#### `.agent/HANDOFF.md`
+```markdown
+# Agent Handoff
 
-Create `.agent/` directory and write these files:
+## Current Task
+Initial project context setup.
+
+## Status
+`.agent/` context files were generated for the project.
+
+## Next Action
+Review generated context files with the user and start the requested task.
+
+## Touched Files
+- `.agent/` — persistent project context
+
+## Validation
+- Last run: (none)
+- Still needed: Run the project's recommended validation command once identified.
+
+## Source Freshness
+Initial context generated from key project files.
+
+## Blockers
+(none)
+
+## User Instructions
+(none)
+
+## Notes for Next Agent
+Read this file first, then `.agent/PROGRESS.md`. Load other `.agent/` files only when needed.
+```
 
 #### `.agent/ARCHITECTURE.md`
 ```markdown
 # Project Architecture
 
 ## Overview
-[1-2 sentence project description from README/metadata]
+[1-2 sentence project description]
 
 ## Tech Stack
 - Language: [from package.json/pyproject.toml/etc.]
@@ -52,16 +82,16 @@ Create `.agent/` directory and write these files:
 - Test framework: [if detected]
 
 ## Directory Structure
-[Key directories with descriptions, from your scan]
+[Key directories and responsibilities]
 
 ## Entry Points
-[Main files: index.ts, main.py, app.py, etc.]
+[Main files or commands]
 
 ## Key Modules
-[Important modules and their responsibilities]
+[Important modules and responsibilities]
 
 ## Data Flow
-[If applicable — how data moves through the system]
+[If applicable]
 ```
 
 #### `.agent/COMMANDS.md`
@@ -69,30 +99,28 @@ Create `.agent/` directory and write these files:
 # Project Commands
 
 ## Setup
-| Purpose | Command |
-|---------|---------|
-| Install deps | [from package.json/pyproject.toml] |
-| Activate env | [if venv/conda detected] |
+- Install deps: [command or "(none detected)"]
+- Activate env: [command or "(none detected)"]
 
 ## Development
-| Purpose | Command |
-|---------|---------|
-| Start dev server | [if detected] |
-| Run tests | [if detected] |
-| Lint | [if detected] |
-| Type check | [if detected] |
+- Start dev server: [command or "(none detected)"]
+- Test: [command or "(none detected)"]
+- Lint: [command or "(none detected)"]
+- Type check: [command or "(none detected)"]
+
+## Validation Profile
+- Small docs/context edit: [recommended check and caveat]
+- Code change: [recommended check and caveat]
 
 ## Build & Deploy
-| Purpose | Command |
-|---------|---------|
-| Build | [if detected] |
-| Deploy | [if detected] |
-
-## Data Processing
-[If applicable — data pipeline commands]
+- Build: [command or "(none detected)"]
+- Deploy: [command or "(none detected)"]
 
 ## Custom Scripts
-[Any scripts found in package.json scripts, Makefile targets, etc.]
+[package.json scripts, Makefile targets, data jobs, etc.]
+
+## Command Notes
+- [Slow/flaky commands, environment gotchas, or "(none yet)"]
 ```
 
 #### `.agent/CONFIG.md`
@@ -100,18 +128,36 @@ Create `.agent/` directory and write these files:
 # Project Configuration
 
 ## Environment Variables
-| Variable | Purpose | Location |
-|----------|---------|----------|
-| [name] | [what it's for] | .env |
+- `[name]` — [purpose], [location]
 
 ## API Keys
-[If any API keys are needed, document WHERE they are stored — never the actual values]
+[Where keys live; never values]
 
 ## External Services
-[Any external services the project depends on]
+[Services and purpose, or "(none detected)"]
 
 ## Local Setup
-[Steps to get the project running locally]
+[Concise local setup notes]
+```
+
+#### `.agent/CONVENTIONS.md`
+```markdown
+# Project Conventions
+
+## Coding Style
+[Formatter, linter, naming, structure, abstraction preferences, or "(none recorded yet)"]
+
+## User Preferences
+[Durable communication or workflow preferences, or "(none recorded yet)"]
+
+## Project Boundaries
+[Files, modules, or behaviors that need extra care, or "(none recorded yet)"]
+
+## Review and Validation Habits
+[Preferred checks before claiming completion]
+
+## Domain Vocabulary
+[Stable project terms and meanings, or "(none recorded yet)"]
 ```
 
 #### `.agent/PROGRESS.md`
@@ -119,10 +165,13 @@ Create `.agent/` directory and write these files:
 # Project Progress
 
 ## Current Focus
-[Auto-detected from recent git log, or "Initial setup"]
+[Current project focus, or "Initial setup"]
 
 ## Completed
 - [x] (YYYY-MM-DD) Project context initialized
+
+## Older Milestones
+(none)
 
 ## In Progress
 (none)
@@ -132,31 +181,30 @@ Create `.agent/` directory and write these files:
 
 ## Blockers
 (none)
+
+## Context Freshness
+- Last sync: YYYY-MM-DD
+- Source revision: [git commit/branch if available, or "(unknown)"]
 ```
 
-#### `.agent/DECISIONS.md`
+#### `.agent/MEMORY.md`
 ```markdown
-# Technical Decisions Log
+# Project Memory
 
 ## Decisions
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| | | |
 
 ## Lessons Learned
-| Date | Lesson | Context |
-|------|--------|---------|
+| Date | Type | Lesson | Corrective Guidance |
+|------|------|--------|---------------------|
+| | | | |
 ```
 
-### Step 4: Present to user
+## Rules
 
-Show the user:
-1. A summary of what was detected and generated.
-2. Ask them to review the files and add anything you missed.
-3. Tell them: "From now on, I'll auto-maintain these files. You don't need to manage them manually."
-
-### Important
-
-- **Never hardcode API keys or secrets** in `.agent/CONFIG.md` — only document where they're stored.
-- **Don't over-scan** — stick to the files listed above. Don't read every source file.
-- **Keep it concise** — these are reference files, not comprehensive documentation.
-- **If the project is minimal** (no README, no config files), still create the `.agent/` structure with placeholders and ask the user to fill in.
+- Never store secret values.
+- Use real dates from the system.
+- If the project is minimal, still create the structure with concise "(none detected)" entries.
+- Keep files useful for future agents, not comprehensive docs.

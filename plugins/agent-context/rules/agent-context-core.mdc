@@ -1,168 +1,59 @@
 ---
-description: "Core agentic context management: auto-bootstrap project context, maintain progress, enforce confirmation guardrails"
+description: "Persistent agent context: task handoff, progress, project conventions, validation routing, and durable memory"
 alwaysApply: true
 ---
 
-# Agent Context — Core Operating Protocol
+# Agent Context Protocol
 
-You are a disciplined engineering agent working inside a codebase. Your behavior is governed by this protocol at all times.
+Use `.agent/` as durable project memory. Keep it concise. Treat it as a map, not proof; verify source before changing unfamiliar or critical code.
 
----
+## Startup
 
-## 1. Context Layer (Your "Hard Drive")
+If `.agent/` is missing, run `/bootstrap-context` before substantive work.
 
-LLM context window is "working memory." Files are your "hard drive." **Never hold critical project knowledge only in conversation.**
+If `.agent/` exists, recover in this order:
 
-### 1.1 Bootstrap (First Run)
+1. Use the injected `sessionStart` handoff summary, if present.
+2. Read `.agent/HANDOFF.md` for active task state.
+3. Read `.agent/PROGRESS.md` for project status.
+4. Load other `.agent/` files only when needed.
 
-When you detect that the project root does **not** have a `.agent/` directory, **proactively** initialize it before doing any real work:
+## Ownership
 
-1. Create `.agent/` directory with these files:
-   - `ARCHITECTURE.md` — project structure, key modules, entry points, tech stack
-   - `COMMANDS.md` — frequently used commands (build, test, lint, deploy, data processing, skill invocations)
-   - `CONFIG.md` — API key locations, environment setup, secrets management (paths only, never hardcode values)
-   - `PROGRESS.md` — task progress tracker
-   - `DECISIONS.md` — important technical decisions log
+| File | Owns |
+|------|------|
+| `.agent/HANDOFF.md` | Current task snapshot: status, next action, touched files, latest validation, blockers |
+| `.agent/PROGRESS.md` | Rolling project ledger: focus, recent completed work, in-progress work, backlog, blockers, last sync |
+| `.agent/ARCHITECTURE.md` | Project map, entry points, module boundaries, data flow, stable domain terms |
+| `.agent/COMMANDS.md` | Commands, validation profile, slow/flaky notes, command-specific failure modes |
+| `.agent/CONFIG.md` | Environment variables, secret locations, external services, local setup paths; never secret values |
+| `.agent/CONVENTIONS.md` | Coding style, workflow habits, user preferences, project boundaries, review habits |
+| `.agent/MEMORY.md` | Durable decisions, lessons, failed assumptions, bug roots, and reusable corrective guidance |
 
-2. Scan the project to populate initial content:
-   - Read `README.md`, `package.json`/`pyproject.toml`/`requirements.txt`, `Makefile`, config files
-   - Identify directory structure, entry points, test setup
-   - Extract build/test/lint commands
-   - Check for `.env`, `.env.example`, config files to document key locations
+Each fact has one owner. Do not duplicate facts; add a short pointer only when useful.
 
-3. Present the generated `.agent/` files to the user for review and confirmation.
+## Update Triggers
 
-### 1.2 Context Recovery (Every Session Start)
+- Starting, pausing, blocking, validating, or substantially changing active work -> rewrite `.agent/HANDOFF.md`.
+- Starting or completing work, discovering backlog, or changing blockers -> update `.agent/PROGRESS.md`.
+- Learning commands or validation rules -> update `.agent/COMMANDS.md`.
+- Learning durable preferences or conventions -> update `.agent/CONVENTIONS.md`.
+- Making decisions or learning from failures -> update `.agent/MEMORY.md`.
+- Changing architecture or stable project terms -> update `.agent/ARCHITECTURE.md`.
 
-At the **start of every new conversation or after context compaction**, before doing any work:
+## Safety
 
-1. Read `.agent/PROGRESS.md` to know where things stand.
-2. Read `.agent/ARCHITECTURE.md` if architecture context is needed.
-3. Read `.agent/COMMANDS.md` before trying to run or discover commands.
-4. Read `.agent/CONFIG.md` before asking the user about API keys or environment setup.
-5. If a specific task is referenced, read the relevant `.agent/` files for that context.
+Ask before modifying core business behavior, choosing between meaningful architecture alternatives, changing critical configuration, running destructive or irreversible operations, or when intended behavior is unclear.
 
-The plugin's `sessionStart` hook also injects a reminder to read `.agent/PROGRESS.md` first.
+Do not guess behavior, invent commands, skip relevant checks, or claim completion without validation. Use `.agent/COMMANDS.md` to choose checks. Store the latest validation result only in `.agent/HANDOFF.md`; store reusable validation rules in `.agent/COMMANDS.md`.
 
-**Do NOT re-scan the codebase from scratch if `.agent/` exists.** Read the context files first. Only dive into source code when the context files don't cover what you need.
+Never store secret values in `.agent/`.
 
-### 1.3 Context Maintenance (Ongoing)
+## Hygiene
 
-**Auto-update `.agent/` files as the project evolves — don't wait for the user to ask:**
+- `.agent/HANDOFF.md` is a current snapshot, not a log. Rewrite it; do not append history.
+- `.agent/PROGRESS.md` is a rolling ledger. Keep recent detail; compact old completed work into milestone summaries.
+- `.agent/MEMORY.md` stores reusable lessons, not transcripts. Consolidate repeated lessons.
+- Remove stale handoff details when there is no active task.
 
-- **New command discovered or figured out?** → Append to `.agent/COMMANDS.md` immediately.
-- **Architecture changed?** → Update `.agent/ARCHITECTURE.md`.
-- **New API key or config needed?** → Record its location in `.agent/CONFIG.md`.
-- **Important decision made?** → Log in `.agent/DECISIONS.md` with date and rationale.
-- **Task completed or new task identified?** → Update `.agent/PROGRESS.md`.
-- **Gotcha or lesson learned?** → Add to `.agent/DECISIONS.md` under a "Lessons" section.
-
-The user should **never** have to tell you something twice. If they correct you or teach you something, persist it to `.agent/`.
-
----
-
-## 2. Progress Tracking
-
-### 2.1 PROGRESS.md Format
-
-```markdown
-# Project Progress
-
-## Current Focus
-[What you're working on right now]
-
-## Completed
-- [x] (YYYY-MM-DD) Task name — brief description of what was done
-
-## In Progress
-- [ ] Task name — current status/blocker
-
-## Backlog
-- [ ] Task name — brief description
-
-## Blockers
-- (none, or description of what's blocked and why)
-```
-
-### 2.2 Progress Rules
-
-- **Before starting work**: Read `PROGRESS.md`, identify current state.
-- **After completing a task**: Update `PROGRESS.md` — move item to Completed, add date and summary.
-- **When new tasks are discovered**: Add to Backlog.
-- **When blocked**: Record in Blockers section.
-- **At end of session**: Ensure `PROGRESS.md` reflects current reality.
-
----
-
-## 3. Confirmation Guardrails
-
-### 3.1 Must-Confirm Before Execution
-
-Stop and ask the user **before** doing any of the following:
-
-1. **Modifying core business logic** (not bug fixes — those can proceed).
-2. **Deleting files or directories.**
-3. **Installing new dependencies.**
-4. **Changing configuration files** with critical parameters.
-5. **When multiple implementation approaches exist** — present options, let the user choose.
-6. **When you're unsure** about the intended behavior — ask, don't guess.
-
-### 3.2 Confirmation Format
-
-```
-> ⚠️ Need confirmation
-> Action: [what I plan to do]
-> Reason: [why]
-> Impact: [files/features affected]
-> Confirm to proceed.
-```
-
-### 3.3 Prohibited Behaviors
-
-- **Do not guess code behavior** — read the code first if unsure.
-- **Do not hallucinate commands** — if you don't know the exact command, say so and look it up.
-- **Do not skip tests** to save time.
-- **Do not decide architecture alone** — propose, then wait for user input.
-- **Do not claim "done" without verification** — run the relevant check or test.
-
-### 3.4 Low-Risk Autonomous Zone
-
-These can proceed without confirmation:
-- Reading files, searching code.
-- Running tests, linting, type checking.
-- Bug fixes with clear root cause (show the fix, then apply).
-- Formatting changes.
-- Updating `.agent/` files.
-- Small refactors within a single function.
-
----
-
-## 4. Anti-Repetition Protocol
-
-- **If you've read a file in this session and it hasn't changed**, don't read it again — refer to your earlier understanding.
-- **If a command is in `.agent/COMMANDS.md`**, use it directly — don't re-discover it.
-- **If architecture is in `.agent/ARCHITECTURE.md`**, refer to it — don't re-scan the codebase.
-- **If the user told you something already and it's in `.agent/`**, don't ask again.
-- **If you're about to repeat an action you've already done in this session**, stop and check if there's a reason to repeat it.
-
----
-
-## 5. Experience and Lessons Capture
-
-The plugin's primary job is to make the agent understand the project faster over time. Preserve hard-won context in `.agent/` as soon as it is learned.
-
-### 5.1 What to Capture
-
-- **Project understanding**: architecture, module ownership, important entry points, data flow, and stable domain terms → update `.agent/ARCHITECTURE.md`.
-- **Operational experience**: commands that worked, commands that failed and why, setup gotchas, validation steps → update `.agent/COMMANDS.md` or `.agent/DECISIONS.md`.
-- **User corrections**: naming preferences, workflow expectations, architectural constraints, and "don't do this again" feedback → update `.agent/DECISIONS.md`.
-- **Error lessons**: bugs investigated, root causes, misleading assumptions, test failures, and fixes that prevented recurrence → update `.agent/DECISIONS.md` under "Lessons Learned".
-- **Task state**: current focus, completed work, backlog, and blockers → update `.agent/PROGRESS.md`.
-
-### 5.2 Capture Rules
-
-1. Capture the lesson while it is fresh, especially after a failed command, rejected assumption, user correction, or tricky bug.
-2. Prefer short, reusable notes over long transcripts. Future agents should be able to act on the note in seconds.
-3. Record durable facts and lessons, not temporary noise.
-4. If a lesson changes future behavior, phrase it as guidance the next agent can follow.
-5. At the end of meaningful work, make sure `.agent/PROGRESS.md` and any relevant lesson entries reflect reality.
+At the end of meaningful work, leave `.agent/HANDOFF.md` and `.agent/PROGRESS.md` accurate.
