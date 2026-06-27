@@ -1,25 +1,19 @@
 ---
 name: update-progress
-description: Update .agent/PROGRESS.md as a rolling project ledger. Use when starting or completing work, changing blockers, discovering backlog, syncing context, or answering status questions.
+description: Update .agent/PROGRESS.md as the rolling project ledger.
 ---
 
 # Update Progress
 
-## Use When
-
-- After completing a task or milestone
-- When starting a new task
-- When blockers, backlog, or current focus change
-- When context was just synced
-- When the user asks for status
+Use when starting/finishing work, changing focus/backlog/blockers, syncing context, or answering status.
 
 ## Instructions
 
 1. Read `.agent/PROGRESS.md`.
-2. If the user only wants status and nothing changed, report only; do not rewrite.
-3. Otherwise rewrite `.agent/PROGRESS.md` using the template below.
-4. Keep recent detail. Compact old completed work into milestone summaries instead of growing forever.
-5. Refresh `.agent/HANDOFF.md` too if the active task's next action, validation, touched files, or blockers changed.
+2. Status-only and unchanged: report; do not rewrite.
+3. Otherwise rewrite using the template.
+4. Keep recent detail; compact old work.
+5. Refresh `HANDOFF.md` if next action, validation, touched files, or blockers changed.
 
 ## Template
 
@@ -27,7 +21,7 @@ description: Update .agent/PROGRESS.md as a rolling project ledger. Use when sta
 # Project Progress
 
 ## Current Focus
-[The one thing you're working on right now]
+[One current focus]
 
 ## Completed
 - [x] (YYYY-MM-DD) Task — brief description
@@ -54,6 +48,6 @@ description: Update .agent/PROGRESS.md as a rolling project ledger. Use when sta
 - Use real dates from the system.
 - Keep `Current Focus` singular.
 - Keep descriptions one line.
-- Put tactical next action, touched files, and latest validation in `.agent/HANDOFF.md`, not here.
+- Tactical next action, touched files, latest validation -> `HANDOFF.md`.
 - Do not hide blockers.
-- Report current focus, completed change, blockers, and next backlog item when relevant.
+- Report focus, completed change, blockers, and next backlog item when relevant.

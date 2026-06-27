@@ -1,23 +1,19 @@
 ---
 name: handoff
-description: Rewrite .agent/HANDOFF.md as the current task snapshot. Use before pausing, switching chats, compaction, after substantive edits or validation, or when the user asks to hand off or resume later.
+description: Rewrite .agent/HANDOFF.md as the current task snapshot before pause, compaction, blockers, validation, or handoff.
 ---
 
 # Handoff
 
-## Use When
-
-- Before ending or pausing a meaningful task
-- Before a new chat or likely context compaction
-- After substantive edits, validation, blockers, or direction changes
-- The user asks to hand off, resume later, wrap up, or preserve state
+Use before pauses, new chats, likely compaction, blockers, direction changes, substantive edits, validation, or explicit handoff requests.
 
 ## Instructions
 
-1. Read `.agent/HANDOFF.md` if present, then `.agent/PROGRESS.md`. Read other `.agent/` files only if needed.
-2. Rewrite `.agent/HANDOFF.md` with the current task snapshot. Do not append history.
-3. Keep it concise, factual, and action-oriented. Never store secrets.
-4. Report that the handoff was updated and name the next action.
+1. Read `HANDOFF.md`, `PROGRESS.md`, then only needed `.agent/` files.
+2. Rewrite `.agent/HANDOFF.md`; never append.
+3. Keep it concise, factual, secret-free, and action-oriented.
+4. Make `Next Action` concrete and verifiable, preferably with a `COMMANDS.md` check.
+5. Report the update and next action.
 
 ## Template
 
@@ -25,37 +21,38 @@ description: Rewrite .agent/HANDOFF.md as the current task snapshot. Use before 
 # Agent Handoff
 
 ## Current Task
-[One sentence describing the active user goal, or "No active task."]
+[Active goal, or "No active task."]
 
 ## Status
-[What is done, what is in progress, and what changed most recently.]
+[Done / in progress / latest change.]
 
 ## Next Action
-[The next concrete step a new agent should take.]
+[Concrete next step + verification.]
 
 ## Touched Files
 - `[path]` — [why it matters]
 
 ## Validation
 - Last run: `[command]` — [result]
-- Still needed: [checks still needed, or "(none)"]
+- Still needed: [checks, or "(none)"]
 
 ## Source Freshness
-[Relevant source/context checked for this task, or "(not checked)"]
+[Source/context checked, or "(not checked)"]
 
 ## Blockers
-[Current blocker, missing decision, failing check, or "(none)"]
+[Blocker, missing decision, failing check, or "(none)"]
 
 ## User Instructions
-[Durable instructions from the user that affect this task, or "(none)"]
+[Task-relevant durable instructions, or "(none)"]
 
 ## Notes for Next Agent
-[Short tactical notes, gotchas, assumptions, or "(none)"]
+[Tactical notes, gotchas, assumptions, or "(none)"]
 ```
 
 ## Rules
 
-- Current snapshot only; no transcript, changelog, or append-only log.
-- If there is no active task, say so and clear stale task details.
-- Store only the latest validation result here. Store reusable validation rules in `.agent/COMMANDS.md`.
-- If validation could not run, record why and what remains.
+- Snapshot only; no transcript or changelog.
+- No active task: say so and clear stale details.
+- Do not add Goal/Verify fields; encode verification in `Next Action`.
+- Latest validation here; reusable checks in `COMMANDS.md`.
+- If validation did not run, say why and what remains.

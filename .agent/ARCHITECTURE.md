@@ -1,6 +1,38 @@
 # Project Architecture
 
 ## Overview
+agent-context is a Cursor plugin that helps coding agents maintain durable project memory in `.agent/` files. It combines an always-applied rule, skills, and lightweight hooks.
+
+## Tech Stack
+- Language: Markdown, JSON, shell scripts, and Node.js for validation.
+- Framework: Cursor plugin structure.
+- Build tool: (none detected)
+- Test framework: Custom Node validation script.
+
+## Directory Structure
+- `plugins/agent-context/` — plugin package shipped to Cursor.
+- `plugins/agent-context/rules/` — always-applied agent protocol.
+- `plugins/agent-context/skills/` — task-specific skill instructions.
+- `plugins/agent-context/hooks/` — session and stop hooks.
+- `.cursor-plugin/` — local marketplace metadata.
+- `scripts/` — local install and validation utilities.
+
+## Entry Points
+- Plugin manifest: `plugins/agent-context/.cursor-plugin/plugin.json`
+- Marketplace manifest: `.cursor-plugin/marketplace.json`
+- Validation: `node scripts/validate-template.mjs`
+
+## Key Modules
+- `agent-context-core.mdc` defines recovery order, file ownership, update triggers, safety, and hygiene.
+- `handoff` skill rewrites `.agent/HANDOFF.md` as current task state.
+- `bootstrap-context` skill initializes project memory files.
+- Hooks inject handoff context at session start and remind about stale handoffs after turns.
+
+## Data Flow
+Cursor loads plugin rules, skills, and hooks. Hooks read project `.agent/` state, while skills and rules instruct the agent to update `.agent/` files as work changes.
+# Project Architecture
+
+## Overview
 `agent-context` is a lightweight Cursor plugin that gives coding agents persistent project memory, task handoff, validation habits, and project-specific conventions through an auto-maintained `.agent/` directory.
 
 ## Tech Stack

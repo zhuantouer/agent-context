@@ -54,6 +54,17 @@ If you want handoffs shared across a branch or PR, commit them intentionally.
 8. **Confirm before** risky actions (core logic changes, deletions, new deps)
 9. **Capture experience and failure lessons** so future agents avoid repeating mistakes
 
+## How to know it's working
+
+You should notice practical changes in agent behavior:
+
+- New chats resume from `.agent/HANDOFF.md` without you re-explaining the task.
+- Agents re-read less of the codebase because `.agent/ARCHITECTURE.md` points them to the right files.
+- Validation happens more consistently because `.agent/COMMANDS.md` records the project's checks.
+- Handoffs name a concrete next action plus the check that proves it worked.
+- Lessons from mistakes show up in `.agent/MEMORY.md` instead of disappearing with the chat.
+- Diffs stay focused because the core rule tells agents to keep edits tied to the user's request.
+
 ## Installation
 
 ### Option A: Local plugin (recommended for development)

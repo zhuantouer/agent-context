@@ -3,6 +3,18 @@
 ## Decisions
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-06-27 | Borrow Karpathy-inspired ideas selectively rather than copying the full guideline set. | agent-context should stay focused on durable project memory and lightweight operating protocol. |
+
+## Lessons Learned
+| Date | Type | Lesson | Corrective Guidance |
+|------|------|--------|---------------------|
+| 2026-06-27 | Product guidance | User value is easier to perceive when README names observable success signals. | Prefer "How to know it's working" style signals over only describing internal files. |
+| 2026-06-27 | Handoff design | Rigid Goal/Verify fields may become low-signal boilerplate. | Make next actions concrete and verifiable, preferably referencing `.agent/COMMANDS.md`, without adding extra template fields. |
+# Project Memory
+
+## Decisions
+| Date | Decision | Rationale |
+|------|----------|-----------|
 | 2026-06-26 | Keep project memory in `.agent/` files | Persistent files are the plugin's core value: project understanding, accumulated experience, and lessons learned survive chat context loss. |
 | 2026-06-26 | Remove cross-review from the plugin | Cross-review diluted the product direction; the plugin should stay small and focus on durable agent context. |
 | 2026-06-26 | Expand the plugin from project memory to agent work habits | The user clarified that token savings are secondary; the plugin should make AI-assisted coding smoother, more efficient, more reliable, and easier to resume. |

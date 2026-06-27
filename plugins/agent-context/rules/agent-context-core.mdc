@@ -1,59 +1,51 @@
 ---
-description: "Persistent agent context: task handoff, progress, project conventions, validation routing, and durable memory"
+description: "Durable .agent memory: recover context, route facts, validate, and hand off."
 alwaysApply: true
 ---
 
 # Agent Context Protocol
 
-Use `.agent/` as durable project memory. Keep it concise. Treat it as a map, not proof; verify source before changing unfamiliar or critical code.
+Use `.agent/` as durable project memory. Keep it concise; treat it as a map, not proof. Verify source before critical edits.
 
 ## Startup
 
-If `.agent/` is missing, run `/bootstrap-context` before substantive work.
-
-If `.agent/` exists, recover in this order:
-
-1. Use the injected `sessionStart` handoff summary, if present.
-2. Read `.agent/HANDOFF.md` for active task state.
-3. Read `.agent/PROGRESS.md` for project status.
-4. Load other `.agent/` files only when needed.
+- Missing `.agent/`: run `/bootstrap-context` before substantive work.
+- Existing `.agent/`: use `sessionStart` summary, then read `HANDOFF.md`, `PROGRESS.md`, and only needed files.
 
 ## Ownership
 
 | File | Owns |
 |------|------|
-| `.agent/HANDOFF.md` | Current task snapshot: status, next action, touched files, latest validation, blockers |
-| `.agent/PROGRESS.md` | Rolling project ledger: focus, recent completed work, in-progress work, backlog, blockers, last sync |
-| `.agent/ARCHITECTURE.md` | Project map, entry points, module boundaries, data flow, stable domain terms |
+| `.agent/HANDOFF.md` | Current task: status, next action, touched files, latest validation, blockers |
+| `.agent/PROGRESS.md` | Rolling ledger: focus, done, in progress, backlog, blockers, last sync |
+| `.agent/ARCHITECTURE.md` | Project map, entry points, boundaries, data flow, terms |
 | `.agent/COMMANDS.md` | Commands, validation profile, slow/flaky notes, command-specific failure modes |
-| `.agent/CONFIG.md` | Environment variables, secret locations, external services, local setup paths; never secret values |
-| `.agent/CONVENTIONS.md` | Coding style, workflow habits, user preferences, project boundaries, review habits |
-| `.agent/MEMORY.md` | Durable decisions, lessons, failed assumptions, bug roots, and reusable corrective guidance |
+| `.agent/CONFIG.md` | Env names, secret locations, services, setup paths; never values |
+| `.agent/CONVENTIONS.md` | Style, workflow, preferences, boundaries, review habits |
+| `.agent/MEMORY.md` | Decisions, lessons, failed assumptions, bug roots, reusable fixes |
 
-Each fact has one owner. Do not duplicate facts; add a short pointer only when useful.
+One owner per fact. Do not duplicate; add pointers only when useful.
 
 ## Update Triggers
 
-- Starting, pausing, blocking, validating, or substantially changing active work -> rewrite `.agent/HANDOFF.md`.
-- Starting or completing work, discovering backlog, or changing blockers -> update `.agent/PROGRESS.md`.
-- Learning commands or validation rules -> update `.agent/COMMANDS.md`.
-- Learning durable preferences or conventions -> update `.agent/CONVENTIONS.md`.
-- Making decisions or learning from failures -> update `.agent/MEMORY.md`.
-- Changing architecture or stable project terms -> update `.agent/ARCHITECTURE.md`.
+- Start/pause/block/validate/substantial edit -> rewrite `HANDOFF.md`.
+- Start/finish work, backlog, blockers -> update `PROGRESS.md`.
+- Commands/checks -> `COMMANDS.md`.
+- Preferences/conventions -> `CONVENTIONS.md`.
+- Decisions/failures/lessons -> `MEMORY.md`.
+- Architecture/terms -> `ARCHITECTURE.md`.
 
 ## Safety
 
-Ask before modifying core business behavior, choosing between meaningful architecture alternatives, changing critical configuration, running destructive or irreversible operations, or when intended behavior is unclear.
-
-Do not guess behavior, invent commands, skip relevant checks, or claim completion without validation. Use `.agent/COMMANDS.md` to choose checks. Store the latest validation result only in `.agent/HANDOFF.md`; store reusable validation rules in `.agent/COMMANDS.md`.
-
-Never store secret values in `.agent/`.
+Ask before core behavior changes, architecture choices, critical config edits, irreversible operations, or unclear intent.
+Keep edits surgical: every changed line must trace to the request or resulting cleanup. Mention unrelated issues; do not fix them unless asked.
+Do not guess behavior, invent commands, skip checks, or claim completion without validation. Use `COMMANDS.md` for checks. Store latest results in `HANDOFF.md`, reusable rules in `COMMANDS.md`.
+Never store secret values.
 
 ## Hygiene
 
-- `.agent/HANDOFF.md` is a current snapshot, not a log. Rewrite it; do not append history.
-- `.agent/PROGRESS.md` is a rolling ledger. Keep recent detail; compact old completed work into milestone summaries.
-- `.agent/MEMORY.md` stores reusable lessons, not transcripts. Consolidate repeated lessons.
+- `HANDOFF.md` is a current snapshot, not a log. Rewrite it. Next action must be concrete and verifiable, preferably naming a `COMMANDS.md` check.
+- `PROGRESS.md` is a rolling ledger; compact old work.
+- `MEMORY.md` stores reusable lessons, not transcripts; consolidate repeats.
 - Remove stale handoff details when there is no active task.
-
-At the end of meaningful work, leave `.agent/HANDOFF.md` and `.agent/PROGRESS.md` accurate.
+- End meaningful work with accurate `HANDOFF.md` and `PROGRESS.md`.

@@ -10,6 +10,13 @@ Cursor plugin that auto-maintains a `.agent/` directory in your project for pers
 | Skills | `bootstrap-context`, `sync-context`, `update-progress`, `handoff` — auto-invoked or via `/skill-name` |
 | Hooks | `sessionStart` — injects `.agent/HANDOFF.md` summary when available; `stop` — gently reminds stale handoff refreshes |
 
+## How to know it's working
+
+- New chats resume from `.agent/HANDOFF.md` without repeated setup.
+- Agents use `.agent/ARCHITECTURE.md` and `.agent/COMMANDS.md` instead of rediscovering project structure and checks.
+- Handoffs include a concrete next action and the validation that should prove it worked.
+- Diffs stay focused on the user request instead of collecting unrelated cleanup.
+
 ## Local testing
 
 ```bash

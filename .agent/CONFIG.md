@@ -1,6 +1,20 @@
 # Project Configuration
 
 ## Environment Variables
+- `CURSOR_PROJECT_DIR` — used by hook scripts to resolve the active project path.
+
+## API Keys
+(none detected)
+
+## External Services
+- Cursor Plugins — target runtime for plugin installation and execution.
+- Cursor Marketplace — future distribution path referenced by README.
+
+## Local Setup
+Local plugin testing copies `plugins/agent-context` into `~/.cursor/plugins/local/` via `./scripts/install-local.sh`. Do not symlink from outside that directory because Cursor rejects external symlinks.
+# Project Configuration
+
+## Environment Variables
 No required environment variables detected.
 
 ## API Keys
