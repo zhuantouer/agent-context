@@ -4,6 +4,7 @@
 | Date | Decision | Rationale |
 |------|----------|-----------|
 | 2026-06-27 | Borrow Karpathy-inspired ideas selectively rather than copying the full guideline set. | agent-context should stay focused on durable project memory and lightweight operating protocol. |
+| 2026-07-01 | Improve modular-design behavior via an objective signal loop + anti-over-split guard, not more prose or a new heavy skill. | Prose conventions are easily ignored under context pressure and self-assessment is lenient; a measurable stop-hook signal plus a pre-edit checkpoint is lighter and harder to skip. |
 
 ## Lessons Learned
 | Date | Type | Lesson | Corrective Guidance |

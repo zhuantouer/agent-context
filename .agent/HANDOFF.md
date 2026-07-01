@@ -1,37 +1,32 @@
 # Agent Handoff
 
 ## Current Task
-Compress the plugin's always-on rule and skill instructions to reduce token footprint while preserving behavior.
+Add lightweight modular-design guardrails so the plugin nudges agents toward high-cohesion, low-coupling code instead of one growing file.
 
 ## Status
-Rule and skill text was tightened. `bootstrap-context` was reduced from a full template dump to compact file responsibilities; `handoff`, `sync-context`, `update-progress`, and the core rule now use shorter trigger/action/constraint wording. Duplicate `.agent` snapshots are being cleaned up.
+Done. Three minimal changes: (1) core rule gained an "Architecture Checkpoint" (name owning module, split by responsibility not length, no over-fragmentation, one-way deps); (2) `bootstrap-context` + `sync-context` strengthen `ARCHITECTURE.md` with a module map + `last verified` date and add modular-design habits to `CONVENTIONS.md`; (3) the `stop` hook now also emits a conservative large-file signal for touched code files over 600 lines, combined with the handoff reminder.
 
 ## Next Action
-Review the final diff and decide whether to commit; if more plugin protocol text changes, rerun `node scripts/validate-template.mjs`.
+Reinstall the local plugin so changes take effect: `./scripts/install-local.sh`, then Cursor "Developer: Reload Window". Decide whether to commit.
 
 ## Touched Files
-- `plugins/agent-context/rules/agent-context-core.mdc` — condensed always-on protocol
-- `plugins/agent-context/skills/bootstrap-context/SKILL.md` — replaced long templates with compact file responsibilities
-- `plugins/agent-context/skills/handoff/SKILL.md` — shortened trigger, steps, and template placeholders
-- `plugins/agent-context/skills/sync-context/SKILL.md` — shortened change detection and routing
-- `plugins/agent-context/skills/update-progress/SKILL.md` — shortened rolling ledger instructions
-- `.agent/HANDOFF.md` — refreshed current snapshot
-- `.agent/PROGRESS.md` — updated project ledger
-- `.agent/CONVENTIONS.md` — recorded concise protocol convention
-- `.agent/COMMANDS.md` — removed duplicate command sections
+- `plugins/agent-context/rules/agent-context-core.mdc` — added Architecture Checkpoint section
+- `plugins/agent-context/skills/bootstrap-context/SKILL.md` — module map + modular-design habits in generated files
+- `plugins/agent-context/skills/sync-context/SKILL.md` — keep module map + `last verified` fresh on structural change
+- `plugins/agent-context/hooks/scripts/stop-handoff-reminder.sh` — conservative large-file signal combined with handoff reminder
 
 ## Validation
-- Last run: `node scripts/validate-template.mjs` — passed; `git diff --check -- plugins/agent-context/rules/agent-context-core.mdc plugins/agent-context/skills/bootstrap-context/SKILL.md plugins/agent-context/skills/handoff/SKILL.md plugins/agent-context/skills/sync-context/SKILL.md plugins/agent-context/skills/update-progress/SKILL.md` — passed; ReadLints on edited rule/skill files — no errors
+- Last run: `node scripts/validate-template.mjs` — passed; `bash -n` on both hook scripts — passed; stop hook smoke test (handoff-stale branch and large-file branch) — both emit valid JSON
 - Still needed: (none)
 
 ## Source Freshness
-Checked edited rule/skill files, `.agent/COMMANDS.md`, `.agent/CONVENTIONS.md`, `.agent/HANDOFF.md`, and `.agent/PROGRESS.md` on branch `main` at `0b93db7`.
+Checked hook scripts, core rule, bootstrap/sync skills, and `.agent/` memory on branch `main` at `efad0e3`.
 
 ## Blockers
 (none)
 
 ## User Instructions
-Use the fewest words that preserve complete semantics for rules and skills, reducing plugin token cost.
+Keep the plugin lightweight; improve agents' modular architecture behavior via minimal changes (Expert C approach: objective signal loop + anti-over-split guard + module-map freshness), not a heavy workflow framework.
 
 ## Notes for Next Agent
-Keep protocol text concise and action-oriented. Avoid restoring full generated templates inside always-loaded or frequently invoked skill text unless necessary.
+Large-file threshold is 600 lines over a code-extension allowlist, size-capped at 2MB, fails open. It only prompts consideration; it never blocks. Adjust `LINE_THRESHOLD`/`CODE_EXTS` if too noisy.

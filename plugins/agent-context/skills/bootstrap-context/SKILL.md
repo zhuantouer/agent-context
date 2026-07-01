@@ -18,10 +18,10 @@ Use when `.agent/` is missing, the user asks to initialize/refresh context, or `
 ## Create Files
 
 - `HANDOFF.md`: current task, status, next action with verification, touched files, latest validation, freshness, blockers, user instructions, notes.
-- `ARCHITECTURE.md`: overview, stack, structure, entry points, key modules, data flow.
+- `ARCHITECTURE.md`: overview, stack, structure, entry points, data flow, and a module map (each module's responsibility + boundary) with a `last verified` date so agents can route changes to the right module.
 - `COMMANDS.md`: setup/dev/test/lint/type/build/deploy commands, validation profile, scripts, command notes.
 - `CONFIG.md`: env names, key locations, services, local setup; no secret values.
-- `CONVENTIONS.md`: style, preferences, boundaries, review habits, vocabulary.
+- `CONVENTIONS.md`: style, preferences, boundaries, review habits, vocabulary, and modular-design habits (one responsibility per file, split by responsibility not length, one-way dependencies, no over-fragmentation).
 - `PROGRESS.md`: focus, completed, older milestones, in progress, backlog, blockers, freshness.
 - `MEMORY.md`: decisions and lessons with corrective guidance.
 

@@ -24,7 +24,7 @@ Use after structural, dependency, command, config, convention, validation, decis
 ## File Routing
 
 - `HANDOFF.md`: current task, next action, touched files, latest validation, blockers; clear stale task state.
-- `ARCHITECTURE.md`: map, stack, entry points, boundaries, data flow, terms.
+- `ARCHITECTURE.md`: map, stack, entry points, boundaries, data flow, terms; on structural change, update the module map and its `last verified` date so it never misleads routing.
 - `COMMANDS.md`: commands, scripts, validation profile, slow/flaky notes; latest results stay in `HANDOFF.md`.
 - `CONFIG.md`: env names, secret locations, services, setup paths; never values.
 - `CONVENTIONS.md`: durable style, workflow, communication, review, boundary preferences.

@@ -89,6 +89,33 @@ for path in changed_paths:
     except OSError:
         continue
 
+# Conservative large-file signal: flag touched code files that have grown past a
+# line threshold, so the agent considers splitting by responsibility. Heuristic only.
+CODE_EXTS = {
+    ".py", ".js", ".jsx", ".ts", ".tsx", ".go", ".rs", ".java", ".rb", ".php",
+    ".c", ".cc", ".cpp", ".h", ".hpp", ".cs", ".swift", ".kt", ".scala", ".m", ".mm",
+}
+LINE_THRESHOLD = 600
+MAX_BYTES = 2_000_000
+
+large_files = []
+for path in changed_paths:
+    if path.suffix.lower() not in CODE_EXTS:
+        continue
+    try:
+        if not path.is_file() or path.stat().st_size > MAX_BYTES:
+            continue
+        with path.open("r", encoding="utf-8", errors="replace") as fh:
+            line_count = sum(1 for _ in fh)
+    except OSError:
+        continue
+    if line_count >= LINE_THRESHOLD:
+        try:
+            rel = path.relative_to(root)
+        except ValueError:
+            rel = path
+        large_files.append((str(rel), line_count))
+
 try:
     handoff_text = handoff.read_text(encoding="utf-8", errors="replace").strip()
     handoff_mtime = handoff.stat().st_mtime
@@ -96,17 +123,26 @@ except OSError:
     handoff_text = ""
     handoff_mtime = 0.0
 
-if handoff_text and handoff_mtime + 2 >= latest_change:
+handoff_stale = not (handoff_text and handoff_mtime + 2 >= latest_change)
+
+notes = []
+if handoff_stale:
+    notes.append(
+        "Refresh `.agent/HANDOFF.md` with the latest task state, touched files, "
+        "validation, and blockers. Keep it concise; if there is no active task, say so."
+    )
+if large_files:
+    listing = "; ".join(f"{name} (~{count} lines)" for name, count in large_files[:5])
+    notes.append(
+        "These touched files are large: "
+        f"{listing}. If any now covers multiple responsibilities, consider splitting "
+        "it by responsibility into focused modules (do not over-fragment) and update "
+        "the `.agent/ARCHITECTURE.md` module map."
+    )
+
+if not notes:
     emit({})
     raise SystemExit(0)
 
-emit(
-    {
-        "followup_message": (
-            "Before finishing, refresh `.agent/HANDOFF.md` with the latest task state, "
-            "touched files, validation, and blockers. Keep it concise; if there is no "
-            "active task, say so."
-        )
-    }
-)
+emit({"followup_message": "Before finishing: " + " ".join(notes)})
 PY

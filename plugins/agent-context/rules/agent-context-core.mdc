@@ -26,6 +26,10 @@ Use `.agent/` as durable project memory. Keep it concise; treat it as a map, not
 
 One owner per fact. Do not duplicate; add pointers only when useful.
 
+## Architecture Checkpoint
+
+Before non-trivial edits, name the module that should own the change (check `ARCHITECTURE.md`). Split by responsibility, not by length: prefer an existing seam or a focused new module over growing an entry-point/"catch-all" file, but do not fragment one concern into many tiny files or add premature abstraction. Keep dependency direction one-way; avoid cycles.
+
 ## Update Triggers
 
 - Start/pause/block/validate/substantial edit -> rewrite `HANDOFF.md`.
