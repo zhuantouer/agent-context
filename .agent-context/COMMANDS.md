@@ -27,6 +27,16 @@ Run from the repository root with `S=plugins/agent-context/hooks/scripts` and `R
 - Codex stop, loop guard (expect `{}`):
   `echo "{\"last_assistant_message\":\"done\",\"stop_hook_active\":true,\"cwd\":\"$R\"}" | python3 $S/handoff-signal.py codex`
 
+## Verifying a Live Codex Install
+The smoke tests only prove the scripts work, not that Codex runs them. To check the real install:
+- Install state, the first thing to check: `codex plugin list` (CLI lives at `/Applications/ChatGPT.app/Contents/Resources/codex`). Expect `agent-context@personal  installed, enabled`. A status of `not installed` means the marketplace entry exists but Codex never snapshotted the plugin, and the desktop UI hides it — fix with `codex plugin add agent-context@personal`.
+- Marketplace discovery: `codex plugin marketplace list` — `personal` with root `$HOME` must be listed.
+- The bytes Codex actually runs live in `~/.codex/plugins/cache/personal/agent-context/<version>/`, not in `~/.codex/plugins/agent-context/`. Smoke-test that copy when debugging a live install.
+- Plugin load errors: `sqlite3 ~/.codex/logs_2.sqlite "SELECT datetime(ts,'unixepoch','localtime'), level, substr(feedback_log_body,1,150) FROM logs WHERE target LIKE '%plugins%' AND level='WARN' ORDER BY id DESC LIMIT 10;"` — a `configured non-curated plugin no longer exists in discovered marketplaces` warning means `~/.codex/config.toml` enables a plugin name the marketplace does not declare.
+- Enabled names must match: compare `rg 'agent-context' ~/.codex/config.toml` against the `name` in `~/.agents/plugins/marketplace.json`.
+- In the app: the plugin appears under Plugins, and a new session flashes the `statusMessage` from `hooks/codex-hooks.json` ("Loading agent-context protocol and handoff").
+- Behavioral: ask a fresh session which file owns validation commands and when `HANDOFF.md` must be rewritten. With the protocol injected it answers `COMMANDS.md` and the start/pause/block/validate/substantial-edit triggers without reading any file.
+
 ## Build & Deploy
 - Build: No build step detected.
 - Local install: `./scripts/install-local.sh [cursor|codex|all]` (defaults to `cursor`).

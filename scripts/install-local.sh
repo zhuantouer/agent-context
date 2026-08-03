@@ -80,12 +80,40 @@ print(f"  Marketplace '{data['name']}' updated: {path} ({len(plugins)} plugin(s)
 PY
 }
 
+codex_cli() {
+  if command -v codex >/dev/null 2>&1; then
+    command -v codex
+    return 0
+  fi
+  local bundled="/Applications/ChatGPT.app/Contents/Resources/codex"
+  if [ -x "$bundled" ]; then
+    echo "$bundled"
+    return 0
+  fi
+  return 1
+}
+
+# Codex only reads a plugin from its own versioned snapshot under
+# ~/.codex/plugins/cache/. Copying the source and declaring the marketplace
+# entry leaves the plugin "not installed", which the desktop UI hides entirely.
+# `plugin add` re-copies even when the version is unchanged, so run it always.
+activate_codex_plugin() {
+  local cli
+  if ! cli="$(codex_cli)"; then
+    echo "  codex CLI not found; run 'codex plugin add ${PLUGIN_NAME}@personal' yourself" >&2
+    return 0
+  fi
+  "$cli" plugin add "${PLUGIN_NAME}@personal" 2>&1 | sed 's/^/  /'
+}
+
 install_codex() {
   local dest="${HOME}/.codex/plugins/${PLUGIN_NAME}"
   copy_plugin "$dest"
   echo "Installed ${PLUGIN_NAME} for Codex: ${dest}"
   register_codex_marketplace
-  echo "  Next: restart Codex, then install/enable '${PLUGIN_NAME}' from the personal marketplace"
+  activate_codex_plugin
+  echo "  Next: restart Codex"
+  echo "  Verify: codex plugin list  (expect 'agent-context@personal  installed, enabled')"
   echo "  Codex asks you to trust plugin hooks before they run; without trust there is no protocol injection"
 }
 

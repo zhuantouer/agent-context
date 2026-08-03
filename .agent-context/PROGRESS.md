@@ -4,6 +4,7 @@
 Dual-host (Cursor + Codex) packaging for the agent-context plugin.
 
 ## Completed
+- [x] (2026-08-03) Fixed the Codex install: the plugin was discoverable but `not installed`, which the desktop UI hides. `install-local.sh codex` now runs `codex plugin add agent-context@personal` so the plugin is snapshotted into `~/.codex/plugins/cache/` and enabled; `COMMANDS.md` leads its live checks with `codex plugin list`.
 - [x] (2026-08-03) Trimmed the always-applied rule from ~790 to ~721 tokens by folding `Update Triggers` into the `Ownership` table and hoisting the repeated `.agent-context/` prefix out of it; behavioral sections left intact.
 - [x] (2026-08-03) Renamed the memory directory `.agent/` to `.agent-context/` so it is namespaced by its owner instead of sitting one character from the ecosystem's `.agents/`; 91 references updated across 17 files.
 - [x] (2026-08-03) Kept the name `agent-context` after finding all eight candidate names taken, and moved differentiation into the manifests, keywords, and README taglines: no index, no database, no daemon, no MCP server, stdlib-only hooks, one source for two hosts.
@@ -20,7 +21,7 @@ Dual-host (Cursor + Codex) packaging for the agent-context plugin.
 (none)
 
 ## In Progress
-- [ ] A real Codex install and live session check (scripted smoke tests pass; the in-host path is untested)
+- [ ] Live Codex session check: the plugin now reports `installed, enabled` and the cached hook copy passes the SessionStart smoke test, but nothing has confirmed Codex itself firing the hook — needs an app restart plus hook-trust approval
 
 ## Backlog
 - Rewrite the install sections of `README.md` and `plugins/agent-context/README.md` for both hosts; they still document Cursor only, which now contradicts the dual-host taglines above them
