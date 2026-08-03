@@ -1,0 +1,29 @@
+{
+  "description": "agent-context lifecycle hooks for Codex",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/session-context.py\" codex",
+            "statusMessage": "Loading agent-context protocol and handoff",
+            "additionalContextLimit": 10000
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/handoff-signal.py\" codex",
+            "statusMessage": "Checking handoff freshness"
+          }
+        ]
+      }
+    ]
+  }
+}

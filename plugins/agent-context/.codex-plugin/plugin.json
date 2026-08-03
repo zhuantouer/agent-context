@@ -1,0 +1,44 @@
+{
+  "name": "agent-context",
+  "version": "0.1.2",
+  "description": "Project memory as seven plain markdown files: task handoff, project map, commands, and lessons. No index, no database, no MCP server.",
+  "author": {
+    "name": "thanezh"
+  },
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "cursor",
+    "context",
+    "memory",
+    "project-memory",
+    "handoff",
+    "session-handoff",
+    "progress",
+    "validation",
+    "lessons",
+    "agentic",
+    "markdown",
+    "zero-dependency"
+  ],
+  "skills": "./skills/",
+  "hooks": "./hooks/codex-hooks.json",
+  "interface": {
+    "displayName": "Agent Context",
+    "shortDescription": "Project memory in plain markdown. No index, no daemon, no MCP server.",
+    "longDescription": "Your agent forgets everything between sessions. This fixes that with seven markdown files in .agent-context/ — current task handoff, progress ledger, project map, commands, config locations, conventions, and lessons learned — that the agent writes and reads on its own. Ships bootstrap-context, handoff, sync-context, and update-progress skills plus SessionStart and Stop hooks. Unlike graph- or vector-based memory tools, there is nothing to index and no service to run: the hooks are Python standard library only, and the same source installs into both Cursor and Codex.",
+    "developerName": "thanezh",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Initialize project context files",
+      "Update progress and write a handoff",
+      "What is the current task state?"
+    ],
+    "brandColor": "#4F46E5",
+    "logo": "./assets/logo.svg"
+  }
+}

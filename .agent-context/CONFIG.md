@@ -18,7 +18,7 @@ Local plugin testing copies `plugins/agent-context` into `~/.cursor/plugins/loca
 No required environment variables detected.
 
 ## API Keys
-No API keys detected. Do not store secret values in this repository or in `.agent/`.
+No API keys detected. Do not store secret values in this repository or in `.agent-context/`.
 
 ## External Services
 - Cursor plugin runtime and local marketplace.

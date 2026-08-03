@@ -1,6 +1,6 @@
 ---
 name: update-progress
-description: Update .agent/PROGRESS.md as the rolling project ledger.
+description: Update .agent-context/PROGRESS.md as the rolling project ledger.
 ---
 
 # Update Progress
@@ -9,7 +9,7 @@ Use when starting/finishing work, changing focus/backlog/blockers, syncing conte
 
 ## Instructions
 
-1. Read `.agent/PROGRESS.md`.
+1. Read `.agent-context/PROGRESS.md`.
 2. Status-only and unchanged: report; do not rewrite.
 3. Otherwise rewrite using the template.
 4. Keep recent detail; compact old work.

@@ -1,63 +1,49 @@
 # Project Architecture
 
 ## Overview
-agent-context is a Cursor plugin that helps coding agents maintain durable project memory in `.agent/` files. It combines an always-applied rule, skills, and lightweight hooks.
+`agent-context` is a lightweight plugin that gives coding agents persistent project memory, task handoff, validation habits, and project conventions through an auto-maintained `.agent-context/` directory in the target project. One plugin package serves two hosts: Cursor and Codex.
 
 ## Tech Stack
-- Language: Markdown, JSON, shell scripts, and Node.js for validation.
-- Framework: Cursor plugin structure.
-- Build tool: (none detected)
-- Test framework: Custom Node validation script.
+- Language: Markdown rules/skills, JSON manifests, Python hook logic, Bash entry points, Node.js validation
+- Framework: Cursor plugin format + Codex plugin format, from a single package
+- Build tool: none
+- Test framework: `scripts/validate-template.mjs` (structure + host-drift assertions)
 
 ## Directory Structure
-- `plugins/agent-context/` — plugin package shipped to Cursor.
-- `plugins/agent-context/rules/` — always-applied agent protocol.
-- `plugins/agent-context/skills/` — task-specific skill instructions.
-- `plugins/agent-context/hooks/` — session and stop hooks.
-- `.cursor-plugin/` — local marketplace metadata.
-- `scripts/` — local install and validation utilities.
+- `plugins/agent-context/` — the single plugin package, installed to either host.
+- `plugins/agent-context/rules/` — canonical operating protocol (also the source Codex injects at session start).
+- `plugins/agent-context/skills/` — host-neutral skills, shared verbatim by both hosts.
+- `plugins/agent-context/hooks/` — both hosts' hook configs plus the shared hook implementation.
+- `.cursor-plugin/marketplace.json` — Cursor marketplace index.
+- `.agents/plugins/marketplace.json` — Codex marketplace index.
+- `scripts/` — install and validation utilities.
 
 ## Entry Points
-- Plugin manifest: `plugins/agent-context/.cursor-plugin/plugin.json`
-- Marketplace manifest: `.cursor-plugin/marketplace.json`
-- Validation: `node scripts/validate-template.mjs`
+- `plugins/agent-context/.cursor-plugin/plugin.json` — Cursor manifest (declares `rules/`, `skills/`, `hooks/hooks.json`).
+- `plugins/agent-context/.codex-plugin/plugin.json` — Codex manifest (declares `skills/`, `hooks/codex-hooks.json`; Codex has no rules slot).
+- `plugins/agent-context/rules/agent-context-core.mdc` — the protocol, single source of truth.
+- `scripts/install-local.sh [cursor|codex|all]` — local install.
+- `node scripts/validate-template.mjs` — validation.
 
-## Key Modules
-- `agent-context-core.mdc` defines recovery order, file ownership, update triggers, safety, and hygiene.
-- `handoff` skill rewrites `.agent/HANDOFF.md` as current task state.
-- `bootstrap-context` skill initializes project memory files.
-- Hooks inject handoff context at session start and remind about stale handoffs after turns.
+## Module Map
+_last verified: 2026-08-03_
 
-## Data Flow
-Cursor loads plugin rules, skills, and hooks. Hooks read project `.agent/` state, while skills and rules instruct the agent to update `.agent/` files as work changes.
-# Project Architecture
-
-## Overview
-`agent-context` is a lightweight Cursor plugin that gives coding agents persistent project memory, task handoff, validation habits, and project-specific conventions through an auto-maintained `.agent/` directory.
-
-## Tech Stack
-- Language: Markdown rules/skills plus Node.js validation scripts
-- Framework: Cursor plugin format
-- Build tool: none detected
-- Test framework: plugin template validation via Node.js script
-
-## Directory Structure
-- `plugins/agent-context/` - Cursor plugin package installed or published to Cursor.
-- `plugins/agent-context/rules/` - Always-applied agent operating protocol.
-- `plugins/agent-context/skills/` - Agent skills for bootstrapping context, syncing context, updating progress, and writing task handoffs.
-- `plugins/agent-context/hooks/` - Cursor hooks for session-start context injection and stop-time handoff reminders.
-- `.cursor-plugin/` - Local marketplace metadata.
-- `scripts/` - Repository scripts such as plugin template validation.
-
-## Entry Points
-- `plugins/agent-context/.cursor-plugin/plugin.json` - Plugin manifest.
-- `plugins/agent-context/rules/agent-context-core.mdc` - Core always-applied agent instructions.
-- `scripts/validate-template.mjs` - Validation command for plugin structure.
-
-## Key Modules
-- Core rule: provides a minimal always-on protocol for recovery order, canonical `.agent/` file ownership, safety checks, and memory hygiene.
-- Skills: provide focused workflows for bootstrapping context, syncing context after changes, updating progress, and preserving active task state.
-- Hooks: inject `.agent/HANDOFF.md` summary on session start and gently remind handoff refreshes on stop when changed files look newer than the handoff.
+| Module | Responsibility | Boundary |
+|--------|----------------|----------|
+| `rules/agent-context-core.mdc` | The operating protocol: recovery order, file ownership, update triggers, safety, hygiene | Only canonical copy. Cursor loads it as an always-applied rule; the Codex hook reads and injects it. Nothing else may restate it. |
+| `skills/*/SKILL.md` | Focused workflows: bootstrap, sync, progress, handoff | Must stay host-neutral — no `/name` or `$name` invocation prefixes. Enforced by the validator. |
+| `hooks/scripts/hook_payload.py` | Parse a host hook payload; resolve the project directory | Knows each host's field precedence. No product logic. |
+| `hooks/scripts/session-context.py` | Build session-start context: protocol (Codex only) + handoff excerpt | One implementation, host chosen by argv. Cursor omits the protocol because its rule already supplies it. |
+| `hooks/scripts/handoff-signal.py` | Two independent stop signals — stale handoff (high frequency) and oversized touched files (low frequency) | One implementation; hosts differ only in turn gate and output shape. Each signal is computed by its own function so either can be tuned alone. Advisory only: Cursor uses `followup_message`, Codex uses `systemMessage`, never a forced continuation. Fails open. |
+| `hooks/scripts/*.sh` | Cursor entry points | Thin wrappers only, because Cursor's `hooks.json` requires a bare relative path. Codex calls Python directly. |
+| `hooks/hooks.json` / `hooks/codex-hooks.json` | Per-host hook wiring | Separate files: the two hosts use different event names and output schemas. |
+| `scripts/validate-template.mjs` | Structure validation for both hosts + drift assertions | The signal that keeps the single-copy invariants true. |
 
 ## Data Flow
-The plugin injects rules, skills, and a session-start hook into Cursor. Agents then persist project knowledge, active task state, commands, validation profile, conventions, progress, and long-term memory into the target project's `.agent/` files.
+The host loads the plugin. Cursor injects the protocol via its always-applied rule and calls the `.sh` hooks; Codex has no rules slot, so its `SessionStart` hook injects the protocol read from `rules/` plus the handoff. Both hosts' hooks funnel into the same Python implementation, which reads the target project's `.agent-context/` state. Skills and the protocol then instruct the agent to write project knowledge back into `.agent-context/`.
+
+Dependency direction is one-way: hook entry points → shared hook logic → `hook_payload`. Nothing in `hooks/` imports from `skills/` or `rules/` except `session-context.py` reading the protocol file as data.
+
+## Terms
+- Host: Cursor or Codex, the agent runtime that loads the plugin.
+- Host-neutral: shared content that names a skill without a host's invocation prefix.

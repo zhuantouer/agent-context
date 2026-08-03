@@ -2,12 +2,12 @@
   "name": "agent-context",
   "displayName": "Agent Context",
   "version": "0.1.2",
-  "description": "Auto-maintained project context, task handoff, validation habits, and lessons learned for Cursor.",
+  "description": "Project memory as seven plain markdown files: task handoff, project map, commands, and lessons. No index, no database, no MCP server.",
   "author": {
     "name": "thanezh"
   },
   "license": "MIT",
-  "keywords": ["cursor", "plugin", "context", "memory", "handoff", "progress", "validation", "lessons", "agentic"],
+  "keywords": ["cursor", "codex", "plugin", "context", "memory", "project-memory", "handoff", "session-handoff", "progress", "validation", "lessons", "agentic", "markdown", "zero-dependency"],
   "logo": "assets/logo.svg",
   "rules": "rules/",
   "skills": "skills/",

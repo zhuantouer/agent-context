@@ -11,17 +11,17 @@
 - User prefers reducing plugin token cost while preserving complete semantics.
 
 ## Project Boundaries
-- `.agent/HANDOFF.md` is local working state by default.
-- Never store secret values in `.agent/CONFIG.md`.
+- `.agent-context/HANDOFF.md` is local working state by default.
+- Never store secret values in `.agent-context/CONFIG.md`.
 - Keep behavioral guidance lightweight; avoid turning the plugin into a heavy workflow framework.
 - Do not reintroduce cross-model review as a core plugin capability.
 
 ## Review and Validation Habits
 - Run `node scripts/validate-template.mjs` for plugin structure changes.
-- Keep latest validation results in `.agent/HANDOFF.md`.
+- Keep latest validation results in `.agent-context/HANDOFF.md`.
 
 ## Domain Vocabulary
 - Handoff: current task snapshot for new chats or context compaction.
-- Validation profile: reusable checks stored in `.agent/COMMANDS.md`.
+- Validation profile: reusable checks stored in `.agent-context/COMMANDS.md`.
 - Surgical edits: changed lines should trace to the user request or cleanup caused by that change.
-- Single-owner routing: each durable fact has one canonical `.agent/` file.
+- Single-owner routing: each durable fact has one canonical `.agent-context/` file.

@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Rewrite .agent/HANDOFF.md as the current task snapshot before pause, compaction, blockers, validation, or handoff.
+description: Rewrite .agent-context/HANDOFF.md as the current task snapshot before pause, compaction, blockers, validation, or handoff.
 ---
 
 # Handoff
@@ -9,8 +9,8 @@ Use before pauses, new chats, likely compaction, blockers, direction changes, su
 
 ## Instructions
 
-1. Read `HANDOFF.md`, `PROGRESS.md`, then only needed `.agent/` files.
-2. Rewrite `.agent/HANDOFF.md`; never append.
+1. Read `HANDOFF.md`, `PROGRESS.md`, then only needed `.agent-context/` files.
+2. Rewrite `.agent-context/HANDOFF.md`; never append.
 3. Keep it concise, factual, secret-free, and action-oriented.
 4. Make `Next Action` concrete and verifiable, preferably with a `COMMANDS.md` check.
 5. Report the update and next action.

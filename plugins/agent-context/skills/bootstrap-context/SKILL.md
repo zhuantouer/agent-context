@@ -1,15 +1,15 @@
 ---
 name: bootstrap-context
-description: Create concise .agent/ project memory when missing or explicitly refreshed.
+description: Create concise .agent-context/ project memory when missing or explicitly refreshed.
 ---
 
 # Bootstrap Project Context
 
-Use when `.agent/` is missing, the user asks to initialize/refresh context, or `/bootstrap-context` runs.
+Use when `.agent-context/` is missing, the user asks to initialize/refresh context, or the `bootstrap-context` skill is invoked.
 
 ## Instructions
 
-1. If `.agent/` exists, ask whether to refresh or keep it.
+1. If `.agent-context/` exists, ask whether to refresh or keep it.
 2. Scan only key files: `README`, package/config manifests, env examples, Docker/Make/just files, rules, `CLAUDE.md`, `AGENTS.md`.
 3. Prefer file tools, `rg`, or portable git commands; avoid broad scans and Unix-only examples.
 4. Create/refresh the files below with concise facts. Never store secrets.

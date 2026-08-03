@@ -1,0 +1,20 @@
+{
+  "name": "agent-context-marketplace",
+  "interface": {
+    "displayName": "Agent Context"
+  },
+  "plugins": [
+    {
+      "name": "agent-context",
+      "source": {
+        "source": "local",
+        "path": "./plugins/agent-context"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

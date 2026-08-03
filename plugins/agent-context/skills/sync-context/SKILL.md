@@ -1,6 +1,6 @@
 ---
 name: sync-context
-description: Sync only .agent/ files affected by project changes.
+description: Sync only .agent-context/ files affected by project changes.
 ---
 
 # Sync Project Context
@@ -10,16 +10,16 @@ Use after structural, dependency, command, config, convention, validation, decis
 ## Instructions
 
 1. Detect changes with the lightest reliable source.
-2. Update only owning `.agent/` files.
+2. Update only owning `.agent-context/` files.
 3. Merge manual additions. Do not overwrite or duplicate them.
 4. Compact noisy history.
 5. Report each updated file with a one-line summary.
 
 ## Change Detection
 
-- Git: use `git diff --name-only HEAD`, `git status --porcelain`, or recent `.agent/` history.
+- Git: use `git diff --name-only HEAD`, `git status --porcelain`, or recent `.agent-context/` history.
 - Verify optional history refs before use.
-- No git: compare key files and `.agent/` timestamps; ask if unclear.
+- No git: compare key files and `.agent-context/` timestamps; ask if unclear.
 
 ## File Routing
 

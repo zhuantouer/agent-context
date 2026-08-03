@@ -1,43 +1,33 @@
 ---
-description: "Durable .agent memory: recover context, route facts, validate, and hand off."
+description: "Durable .agent-context memory: recover context, route facts, validate, and hand off."
 alwaysApply: true
 ---
 
 # Agent Context Protocol
 
-Use `.agent/` as durable project memory. Keep it concise; treat it as a map, not proof. Verify source before critical edits.
+Use `.agent-context/` as durable project memory. Keep it concise; treat it as a map, not proof. Verify source before critical edits.
 
 ## Startup
 
-- Missing `.agent/`: run `/bootstrap-context` before substantive work.
-- Existing `.agent/`: use `sessionStart` summary, then read `HANDOFF.md`, `PROGRESS.md`, and only needed files.
+Missing `.agent-context/`: run the `bootstrap-context` skill first. Otherwise resume from the session-start summary and `HANDOFF.md`, then `PROGRESS.md` if needed; load other files on demand.
 
 ## Ownership
 
-| File | Owns |
-|------|------|
-| `.agent/HANDOFF.md` | Current task: status, next action, touched files, latest validation, blockers |
-| `.agent/PROGRESS.md` | Rolling ledger: focus, done, in progress, backlog, blockers, last sync |
-| `.agent/ARCHITECTURE.md` | Project map, entry points, boundaries, data flow, terms |
-| `.agent/COMMANDS.md` | Commands, validation profile, slow/flaky notes, command-specific failure modes |
-| `.agent/CONFIG.md` | Env names, secret locations, services, setup paths; never values |
-| `.agent/CONVENTIONS.md` | Style, workflow, preferences, boundaries, review habits |
-| `.agent/MEMORY.md` | Decisions, lessons, failed assumptions, bug roots, reusable fixes |
+Files live in `.agent-context/`. One owner per fact; do not duplicate. Write a file whenever the facts it owns change.
 
-One owner per fact. Do not duplicate; add pointers only when useful.
+| File | Owns — write when |
+|------|-------------------|
+| `HANDOFF.md` | Current task: status, next action, touched files, latest validation, blockers. Rewrite on start/pause/block/validate/substantial edit. |
+| `PROGRESS.md` | Rolling ledger: focus, done, in progress, backlog, blockers, last sync. Update on start/finish work, backlog or blocker change. |
+| `ARCHITECTURE.md` | Project map, entry points, boundaries, data flow, terms |
+| `COMMANDS.md` | Commands, validation profile, slow/flaky notes, command-specific failure modes |
+| `CONFIG.md` | Env names, secret locations, services, setup paths; never values |
+| `CONVENTIONS.md` | Style, workflow, preferences, boundaries, review habits |
+| `MEMORY.md` | Decisions, lessons, failed assumptions, bug roots, reusable fixes |
 
 ## Architecture Checkpoint
 
 Before non-trivial edits, name the module that should own the change (check `ARCHITECTURE.md`). Split by responsibility, not by length: prefer an existing seam or a focused new module over growing an entry-point/"catch-all" file, but do not fragment one concern into many tiny files or add premature abstraction. Keep dependency direction one-way; avoid cycles.
-
-## Update Triggers
-
-- Start/pause/block/validate/substantial edit -> rewrite `HANDOFF.md`.
-- Start/finish work, backlog, blockers -> update `PROGRESS.md`.
-- Commands/checks -> `COMMANDS.md`.
-- Preferences/conventions -> `CONVENTIONS.md`.
-- Decisions/failures/lessons -> `MEMORY.md`.
-- Architecture/terms -> `ARCHITECTURE.md`.
 
 ## Safety
 
