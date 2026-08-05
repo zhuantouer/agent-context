@@ -1,19 +1,19 @@
 # Agent Handoff
 
 ## Current Task
-Document multi-host adaptation (Claude Code / OpenCode / Pi) as a public README TODO so contributors can PR.
+Correct the README Philosophy attribution for AgenticMetaEngineering.
 
 ## Status
-Done. Root `README.md` has a short "TODO — more hosts" section with a one-row-per-host approach table and the three invariants (one protocol file, host-neutral skills, advisory stop).
+Done. Removed the fake public GitHub link; noted it as Tencent-internal by r***hou.
 
 ## Next Action
-User-side: skim the new README section and tweak tone if needed. Optional follow-up (separate): rewrite the Cursor/Codex install sections that still read Cursor-only — still in backlog.
+User-side: confirm whether `r***hou` should stay redacted in the public README or be replaced with the full handle.
 
 ## Touched Files
-- `README.md` — added `TODO — more hosts` before Philosophy
+- `README.md` — Philosophy inspiration line
 
 ## Validation
-- Last run: visual review of the section length — short table + three invariants, not a design doc
+- Last run: visual check of the Philosophy paragraph
 - Still needed: (none)
 
 ## Source Freshness
@@ -23,7 +23,7 @@ Verified against the working tree on 2026-08-05.
 None.
 
 ## User Instructions
-Keep README brief; public repo — invite PRs rather than implementing the hosts now.
+AME is Tencent-internal; author r***hou. Public repo — do not link a nonexistent public URL.
 
 ## Notes for Next Agent
-Earlier Codex install work is still waiting on a live Codex session restart + hook trust. Do not treat that as blocked by this README edit.
+(none)

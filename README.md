@@ -147,7 +147,7 @@ Cursor and Codex work today. Claude Code, OpenCode, and Pi do not yet. PRs welco
 
 ## Philosophy
 
-Inspired by [AgenticMetaEngineering](https://github.com/anthropic/AgenticMetaEngineering) and [Superpowers](https://github.com/obra/superpowers), but **radically simplified**:
+Inspired by AgenticMetaEngineering (Tencent-internal, by r***hou) and [Superpowers](https://github.com/obra/superpowers), but **radically simplified**:
 
 - **No 8-stage workflow.** No gate audits. No mandatory worktrees.
 - **No 20+ plugins.** One plugin, one rule file, four skills.
