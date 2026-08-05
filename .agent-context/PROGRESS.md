@@ -1,9 +1,10 @@
 # Project Progress
 
 ## Current Focus
-Dual-host (Cursor + Codex) packaging for the agent-context plugin.
+Dual-host (Cursor + Codex) packaging; further hosts tracked as public README TODOs.
 
 ## Completed
+- [x] (2026-08-05) Documented Claude Code / OpenCode / Pi adaptation sketches in root `README.md` as a short TODO inviting PRs (one protocol file, host-neutral skills, advisory stop).
 - [x] (2026-08-05) Closed the protocol's epistemic gap after reviewing a shared third-party global prompt: the core rule now asks writers to record unverified entries as assumptions, `MEMORY.md` owns open questions, and the `handoff` skill migrates anything that outlives the task before its rewrite discards it. Always-on cost +69 chars (~+18 tokens); the rest lands in on-demand skill bodies.
 - [x] (2026-08-03) Fixed the Codex install: the plugin was discoverable but `not installed`, which the desktop UI hides. `install-local.sh codex` now runs `codex plugin add agent-context@personal` so the plugin is snapshotted into `~/.codex/plugins/cache/` and enabled; `COMMANDS.md` leads its live checks with `codex plugin list`.
 - [x] (2026-08-03) Trimmed the always-applied rule from ~790 to ~721 tokens by folding `Update Triggers` into the `Ownership` table and hoisting the repeated `.agent-context/` prefix out of it; behavioral sections left intact.
@@ -25,6 +26,7 @@ Dual-host (Cursor + Codex) packaging for the agent-context plugin.
 - [ ] Live Codex session check: the plugin now reports `installed, enabled` and the cached hook copy passes the SessionStart smoke test, but nothing has confirmed Codex itself firing the hook — needs an app restart plus hook-trust approval
 
 ## Backlog
+- Host adapters (tracked in root README TODO): Claude Code, OpenCode, Pi — PRs welcome
 - Rewrite the install sections of `README.md` and `plugins/agent-context/README.md` for both hosts; they still document Cursor only, which now contradicts the dual-host taglines above them
 - Decide whether the hooks should detect a legacy `.agent/` directory left by the old naming and point the user at it, instead of silently treating the project as un-bootstrapped
 - Optional: have `bootstrap-context` offer an `AGENTS.md` pointer for Codex users who do not trust plugin hooks
@@ -34,5 +36,5 @@ Dual-host (Cursor + Codex) packaging for the agent-context plugin.
 - None. The shell recovered and all previously blocked validation has run.
 
 ## Context Freshness
-- Last sync: 2026-08-03
-- Source revision: working tree on `main`, Codex packaging changes uncommitted
+- Last sync: 2026-08-05
+- Source revision: working tree; README multi-host TODO added

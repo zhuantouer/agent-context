@@ -133,6 +133,18 @@ node scripts/validate-template.mjs
 
 Bootstrap avoids Unix-only scan commands in generated guidance. Prefer Cursor file tools, `rg`, or `git ls-files` so the workflow works across macOS, Linux, and Windows-style environments.
 
+## TODO — more hosts
+
+Cursor and Codex work today. Claude Code, OpenCode, and Pi do not yet. PRs welcome; keep changes small and follow the invariants below.
+
+| Host | Rough approach |
+|------|----------------|
+| **Claude Code** | Closest to Codex. Add `.claude-plugin/plugin.json`, point hooks at the existing Python scripts. Codex's `SessionStart`/`Stop` JSON envelope already matches Claude's; smoke-test that plugin SessionStart actually surfaces `additionalContext` (some Claude builds have dropped it from plugin hooks). |
+| **OpenCode** | Thin JS/TS plugin in `opencode.json`. Inject protocol + handoff via `experimental.chat.messages.transform`, register `skills/` via the `config` hook (same pattern as [Superpowers for OpenCode](https://github.com/obra/superpowers/blob/main/docs/README.opencode.md)). Spawn the existing Python hooks instead of rewriting them. |
+| **Pi** | A pi package (`pi.skills` + `pi.extensions`). Inject on `before_agent_start`, advisory nudge on `agent_settled`. Again: call the Python hooks; don't fork the protocol. |
+
+**Invariants for any host PR:** one canonical `rules/agent-context-core.mdc` (every host reads it; none restate it); skills stay host-neutral; stop signals stay advisory (no forced continuation).
+
 ## Philosophy
 
 Inspired by [AgenticMetaEngineering](https://github.com/anthropic/AgenticMetaEngineering) and [Superpowers](https://github.com/obra/superpowers), but **radically simplified**:
