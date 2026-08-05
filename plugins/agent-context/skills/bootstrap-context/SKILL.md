@@ -23,7 +23,7 @@ Use when `.agent-context/` is missing, the user asks to initialize/refresh conte
 - `CONFIG.md`: env names, key locations, services, local setup; no secret values.
 - `CONVENTIONS.md`: style, preferences, boundaries, review habits, vocabulary, and modular-design habits (one responsibility per file, split by responsibility not length, one-way dependencies, no over-fragmentation).
 - `PROGRESS.md`: focus, completed, older milestones, in progress, backlog, blockers, freshness.
-- `MEMORY.md`: decisions and lessons with corrective guidance.
+- `MEMORY.md`: decisions and lessons with corrective guidance, plus open questions that outlive any single task.
 
 ## Rules
 

@@ -4,6 +4,7 @@
 Dual-host (Cursor + Codex) packaging for the agent-context plugin.
 
 ## Completed
+- [x] (2026-08-05) Closed the protocol's epistemic gap after reviewing a shared third-party global prompt: the core rule now asks writers to record unverified entries as assumptions, `MEMORY.md` owns open questions, and the `handoff` skill migrates anything that outlives the task before its rewrite discards it. Always-on cost +69 chars (~+18 tokens); the rest lands in on-demand skill bodies.
 - [x] (2026-08-03) Fixed the Codex install: the plugin was discoverable but `not installed`, which the desktop UI hides. `install-local.sh codex` now runs `codex plugin add agent-context@personal` so the plugin is snapshotted into `~/.codex/plugins/cache/` and enabled; `COMMANDS.md` leads its live checks with `codex plugin list`.
 - [x] (2026-08-03) Trimmed the always-applied rule from ~790 to ~721 tokens by folding `Update Triggers` into the `Ownership` table and hoisting the repeated `.agent-context/` prefix out of it; behavioral sections left intact.
 - [x] (2026-08-03) Renamed the memory directory `.agent/` to `.agent-context/` so it is namespaced by its owner instead of sitting one character from the ecosystem's `.agents/`; 91 references updated across 17 files.

@@ -29,4 +29,4 @@ Use after structural, dependency, command, config, convention, validation, decis
 - `CONFIG.md`: env names, secret locations, services, setup paths; never values.
 - `CONVENTIONS.md`: durable style, workflow, communication, review, boundary preferences.
 - `PROGRESS.md`: focus, recent done, in progress, backlog, blockers, freshness; compact old work.
-- `MEMORY.md`: decisions, lessons, failed assumptions, bug roots, reusable fixes; preferences go in `CONVENTIONS.md`.
+- `MEMORY.md`: decisions, lessons, failed assumptions, open questions, bug roots, reusable fixes; preferences go in `CONVENTIONS.md`.

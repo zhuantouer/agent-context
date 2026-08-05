@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Agent Context Protocol
 
-Use `.agent-context/` as durable project memory. Keep it concise; treat it as a map, not proof. Verify source before critical edits.
+Use `.agent-context/` as durable project memory. Keep it concise; treat it as a map, not proof. Verify source before critical edits; record unverified entries as assumptions, not facts.
 
 ## Startup
 
@@ -23,7 +23,7 @@ Files live in `.agent-context/`. One owner per fact; do not duplicate. Write a f
 | `COMMANDS.md` | Commands, validation profile, slow/flaky notes, command-specific failure modes |
 | `CONFIG.md` | Env names, secret locations, services, setup paths; never values |
 | `CONVENTIONS.md` | Style, workflow, preferences, boundaries, review habits |
-| `MEMORY.md` | Decisions, lessons, failed assumptions, bug roots, reusable fixes |
+| `MEMORY.md` | Decisions, lessons, failed assumptions, open questions, bug roots, reusable fixes |
 
 ## Architecture Checkpoint
 

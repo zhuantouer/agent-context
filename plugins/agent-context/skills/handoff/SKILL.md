@@ -10,10 +10,11 @@ Use before pauses, new chats, likely compaction, blockers, direction changes, su
 ## Instructions
 
 1. Read `HANDOFF.md`, `PROGRESS.md`, then only needed `.agent-context/` files.
-2. Rewrite `.agent-context/HANDOFF.md`; never append.
-3. Keep it concise, factual, secret-free, and action-oriented.
-4. Make `Next Action` concrete and verifiable, preferably with a `COMMANDS.md` check.
-5. Report the update and next action.
+2. Move anything that outlives this task to `PROGRESS.md` or `MEMORY.md`; the rewrite discards the rest.
+3. Rewrite `.agent-context/HANDOFF.md`; never append.
+4. Keep it concise, factual, secret-free, and action-oriented.
+5. Make `Next Action` concrete and verifiable, preferably with a `COMMANDS.md` check.
+6. Report the update and next action.
 
 ## Template
 
@@ -21,7 +22,7 @@ Use before pauses, new chats, likely compaction, blockers, direction changes, su
 # Agent Handoff
 
 ## Current Task
-[Active goal, or "No active task."]
+[Active goal and what "done" means, or "No active task."]
 
 ## Status
 [Done / in progress / latest change.]
