@@ -34,6 +34,7 @@ Before non-trivial edits, name the module that should own the change (check `ARC
 Ask before core behavior changes, architecture choices, critical config edits, irreversible operations, or unclear intent.
 Keep edits surgical: every changed line must trace to the request or resulting cleanup. Mention unrelated issues; do not fix them unless asked.
 Do not guess behavior, invent commands, skip checks, or claim completion without validation. Use `COMMANDS.md` for checks. Store latest results in `HANDOFF.md`, reusable rules in `COMMANDS.md`.
+Before asserting a conclusion, enumerate what the source actually contains; quantified claims ("most", "barely used", "collapsed to one") need a computed number, otherwise mark them as impressions.
 Never store secret values.
 
 ## Hygiene

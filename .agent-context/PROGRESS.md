@@ -4,6 +4,7 @@
 Dual-host (Cursor + Codex) packaging; further hosts tracked as public README TODOs.
 
 ## Completed
+- [x] (2026-08-13) Extended the core rule's `Safety` section to govern asserted conclusions, not just memory writes and pre-edit checks: enumerate the source's contents before concluding, and back a quantified claim with a computed number or mark it an impression. Triggered by a real incident the 2026-08-05 clause would have passed. Always-on cost +198 chars, rule body now 2865 chars (~50 added tokens by the chars/4 estimate; not tokenizer-measured).
 - [x] (2026-08-05) Documented Claude Code / OpenCode / Pi adaptation sketches in root `README.md` as a short TODO inviting PRs (one protocol file, host-neutral skills, advisory stop).
 - [x] (2026-08-05) Closed the protocol's epistemic gap after reviewing a shared third-party global prompt: the core rule now asks writers to record unverified entries as assumptions, `MEMORY.md` owns open questions, and the `handoff` skill migrates anything that outlives the task before its rewrite discards it. Always-on cost +69 chars (~+18 tokens); the rest lands in on-demand skill bodies.
 - [x] (2026-08-03) Fixed the Codex install: the plugin was discoverable but `not installed`, which the desktop UI hides. `install-local.sh codex` now runs `codex plugin add agent-context@personal` so the plugin is snapshotted into `~/.codex/plugins/cache/` and enabled; `COMMANDS.md` leads its live checks with `codex plugin list`.
@@ -36,5 +37,5 @@ Dual-host (Cursor + Codex) packaging; further hosts tracked as public README TOD
 - None. The shell recovered and all previously blocked validation has run.
 
 ## Context Freshness
-- Last sync: 2026-08-05
-- Source revision: working tree; README multi-host TODO added
+- Last sync: 2026-08-13
+- Source revision: working tree; core-rule epistemic clause for asserted conclusions
