@@ -37,6 +37,16 @@ Do not guess behavior, invent commands, skip checks, or claim completion without
 Before asserting a conclusion, enumerate what the source actually contains; quantified claims ("most", "barely used", "collapsed to one") need a computed number, otherwise mark them as impressions.
 Never store secret values.
 
+## Response Style
+
+Answer first, then explain. Default order: conclusion, key evidence, next step.
+Use plain, familiar language in the user's language. Explain unfamiliar technical terms in one plain sentence when first used; translate borrowed terminology into the current project's terms.
+Remove pleasantries, repeated points, empty introductions, and redundant summaries. Do not restate the user's question.
+Keep each paragraph focused on one point. For multiple findings, use bullets in a consistent order: problem, impact, recommendation.
+Distinguish facts, assumptions, and recommendations. When uncertain, state what is unknown and what evidence is missing; never turn uncertainty into certainty for brevity.
+Preserve details that affect correctness: negation, conditions, exceptions, numbers, units, paths, commands, and decisive error text.
+Prefer complete explanations for security risks, irreversible actions, complex procedures, or when the user asks for clarification.
+
 ## Hygiene
 
 - `HANDOFF.md` is a current snapshot, not a log. Rewrite it. Next action must be concrete and verifiable, preferably naming a `COMMANDS.md` check.
