@@ -32,7 +32,8 @@ Before non-trivial edits, name the module that should own the change (check `ARC
 ## Safety
 
 Ask before core behavior changes, architecture choices, critical config edits, irreversible operations, or unclear intent.
-Keep edits surgical: every changed line must trace to the request or resulting cleanup. Mention unrelated issues; do not fix them unless asked.
+Fix the defect class, not only the reported spot: before calling a fix done, search for the same pattern in sibling call sites, parallel modules, other UI surfaces, and each supported host or platform, then report every occurrence found. Repair the ones that share the root cause and are equally safe to verify; list the rest with locations and ask.
+Keep edits surgical: every changed line must trace to the request, that same-defect sweep, or resulting cleanup. Mention issues with a different root cause; do not fix them unless asked.
 Do not guess behavior, invent commands, skip checks, or claim completion without validation. Use `COMMANDS.md` for checks. Store latest results in `HANDOFF.md`, reusable rules in `COMMANDS.md`.
 Before asserting a conclusion, enumerate what the source actually contains; quantified claims ("most", "barely used", "collapsed to one") need a computed number, otherwise mark them as impressions.
 Never store secret values.

@@ -4,6 +4,7 @@
 Dual-host (Cursor + Codex) packaging; further hosts tracked as public README TODOs.
 
 ## Completed
+- [x] (2026-08-27) Closed the `Safety` section's fix-scope blind spot: the surgical-edit clause now requires a same-defect sweep (sibling call sites, parallel modules, other UI surfaces, every host) before a fix counts as done, repairs of same-root-cause instances, and an explicit list-and-ask for the risky ones; "unrelated" is now defined by root cause. Rule body 3849 → 4242 chars. Validator passed; Cursor plugin reinstalled.
 - [x] (2026-08-25) Added a short `Response Style` section to the canonical rule for Cursor and Codex: answer-first order, plain language, focused paragraphs, consistent findings, explicit uncertainty, and accuracy-preserving exceptions. Validator passed; Cursor plugin reinstalled.
 - [x] (2026-08-13) Extended the core rule's `Safety` section to govern asserted conclusions, not just memory writes and pre-edit checks: enumerate the source's contents before concluding, and back a quantified claim with a computed number or mark it an impression. Triggered by a real incident the 2026-08-05 clause would have passed. Always-on cost +198 chars, rule body now 2865 chars (~50 added tokens by the chars/4 estimate; not tokenizer-measured).
 - [x] (2026-08-05) Documented Claude Code / OpenCode / Pi adaptation sketches in root `README.md` as a short TODO inviting PRs (one protocol file, host-neutral skills, advisory stop).
@@ -38,5 +39,5 @@ Dual-host (Cursor + Codex) packaging; further hosts tracked as public README TOD
 - None. The shell recovered and all previously blocked validation has run.
 
 ## Context Freshness
-- Last sync: 2026-08-25
-- Source revision: working tree; core-rule response style added
+- Last sync: 2026-08-27
+- Source revision: working tree; core-rule fix-scope clause added
