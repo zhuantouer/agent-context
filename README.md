@@ -12,7 +12,7 @@ Most tools in this space solve session amnesia with infrastructure: knowledge gr
 | Agent re-reads the entire codebase every time | `.agent-context/ARCHITECTURE.md` gives instant project map |
 | Commands re-discovered through trial & error | `.agent-context/COMMANDS.md` caches commands plus the validation profile |
 | No idea what's done vs. what's left | `.agent-context/PROGRESS.md` tracks everything, auto-updated |
-| New chats lose the execution thread | `.agent-context/HANDOFF.md` captures current task, next action, touched files, validation, and blockers |
+| New chats lose the execution thread | `.agent-context/HANDOFF.md` captures current task, next action, validation, and blockers |
 | Agent misses local project habits | `.agent-context/CONVENTIONS.md` stores style, workflow, boundaries, and user preferences |
 | Agent hallucinates or free-wheels | Built-in confirmation guardrails |
 | Hard-won lessons disappear after the chat | `.agent-context/MEMORY.md` captures project decisions, user corrections, failures, and mistakes to avoid |

@@ -20,7 +20,45 @@ from hook_payload import parse_host, read_payload, resolve_project_dir  # noqa: 
 
 PLUGIN_ROOT = pathlib.Path(__file__).resolve().parents[2]
 PROTOCOL_PATH = PLUGIN_ROOT / "rules" / "agent-context-core.mdc"
-HANDOFF_MAX_CHARS = 4000
+
+# Session-start capsule: enough to resume without opening the file. Carrying every
+# HANDOFF.md field would just reproduce the old whole-file injection, but carrying
+# too few is worse — the agent reads the file anyway and pays for both. Field names
+# match the file's own headings so there is no mapping to keep in sync.
+CAPSULE_ORDER = (
+    "Current Task",
+    "Status",
+    "Next Action",
+    "Blockers",
+    "User Instructions",
+    "Validation",
+    "Notes for Next Agent",
+)
+# Per field, because they are not equally compressible: a clipped `Next Action`
+# defeats the point of the capsule, while `Validation` only needs its headline.
+FIELD_MAX_CHARS = {
+    "Current Task": 200,
+    "Status": 260,
+    "Next Action": 400,
+    "Blockers": 200,
+    "User Instructions": 240,
+    "Validation": 160,
+    "Notes for Next Agent": 220,
+}
+# Backstop only. The per-field caps plus heading overhead must stay under this by
+# construction; scripts/test-hooks.py asserts it rather than dropping fields at
+# runtime, because silently dropping a field is the failure this design replaced.
+CAPSULE_MAX_CHARS = 1850
+EMPTY_FIELD_VALUES = {
+    "none",
+    "none.",
+    "(none)",
+    "(not checked)",
+    "no active task.",
+    "no active task",
+}
+# Checked before English ". " so a Chinese sentence is not cut mid-clause.
+SENTENCE_ENDS = ("\n", "。", "！", "？", "；", ". ", "! ", "? ", "; ")
 
 
 def read_protocol():
@@ -36,40 +74,118 @@ def read_protocol():
     return text.strip()
 
 
-def read_handoff(handoff_path):
-    text = handoff_path.read_text(encoding="utf-8", errors="replace").strip()
-    if len(text) > HANDOFF_MAX_CHARS:
-        text = text[:HANDOFF_MAX_CHARS].rstrip()
-        text += "\n\n[truncated — read .agent-context/HANDOFF.md for the full handoff]"
-    return text
+def split_sections(text):
+    """Map `## Heading` -> body for one markdown document."""
+    sections = {}
+    heading = None
+    body = []
+    for line in text.splitlines():
+        if line.startswith("## "):
+            if heading:
+                sections[heading] = "\n".join(body).strip()
+            heading = line[3:].strip()
+            body = []
+        elif heading:
+            body.append(line)
+    if heading:
+        sections[heading] = "\n".join(body).strip()
+    return sections
+
+
+def last_sentence_end(head):
+    """Index of the last sentence or line boundary in `head`, or -1."""
+    best = -1
+    for mark in SENTENCE_ENDS:
+        found = head.rfind(mark)
+        if found >= 0:
+            best = max(best, found + len(mark) - 1)
+    return best
+
+
+def clip_field(name, value):
+    limit = FIELD_MAX_CHARS.get(name, 240)
+    if len(value) <= limit:
+        return value, False
+    head = value[:limit]
+    # Cut on a sentence or line boundary when one is close enough, so a clipped
+    # field still reads as a statement rather than a fragment.
+    boundary = last_sentence_end(head)
+    if boundary > limit // 2:
+        head = head[: boundary + 1]
+    return head.rstrip() + " …", True
+
+
+def render_fields(fields):
+    return "\n\n".join(f"## {name}\n{value}" for name, value in fields)
+
+
+def is_placeholder(value):
+    return not value or value.strip().lower() in EMPTY_FIELD_VALUES
+
+
+def build_capsule(text):
+    """Return (capsule, caveat): the resume fields, plus a pointer only for the
+    sections the capsule does not carry at all.
+
+    Truncation used to slice the tail off the whole file, which silently dropped
+    whatever sat last. Clipping each field instead keeps every field visible, and
+    a clipped field gets `…` and nothing more: asking the agent to open the file
+    whenever anything was shortened pulls the whole snapshot back into context and
+    cancels the saving. A section the capsule never carries is different — it is
+    invisible from here, so it is the one thing worth naming.
+    """
+    sections = split_sections(text)
+    fields = [
+        (name, clip_field(name, sections[name].strip())[0])
+        for name in CAPSULE_ORDER
+        if not is_placeholder(sections.get(name, ""))
+    ]
+
+    # A handoff without the expected headings cannot be selected from, so fall
+    # back to a head slice — the only case where reading the file is warranted.
+    if not fields:
+        head = text[:CAPSULE_MAX_CHARS].rstrip()
+        caveat = (
+            ""
+            if len(text) <= CAPSULE_MAX_CHARS
+            else "\n\nTruncated; read .agent-context/HANDOFF.md for the rest."
+        )
+        return head, caveat
+
+    uncarried = [
+        name
+        for name, value in sections.items()
+        if name not in CAPSULE_ORDER and not is_placeholder(value)
+    ]
+    caveat = (
+        f"\n\nNot carried here: {', '.join(uncarried)}. "
+        "Read .agent-context/HANDOFF.md only if you need them."
+        if uncarried
+        else ""
+    )
+    return render_fields(fields), caveat
 
 
 def build_handoff_section(project_dir):
+    """State only. The protocol owns what to do about it; restating it here would
+    put a second, drifting copy of `Startup` into every session."""
     agent_dir = pathlib.Path(project_dir) / ".agent-context"
     if not agent_dir.is_dir():
-        return (
-            f"[Agent Context] No .agent-context/ directory in {project_dir}.\n"
-            "Run the bootstrap-context skill to scan the project and generate context files."
-        )
+        return f"[Agent Context] No .agent-context/ directory in {project_dir}."
 
     handoff_path = agent_dir / "HANDOFF.md"
     try:
-        has_handoff = handoff_path.stat().st_size > 0
+        text = handoff_path.read_text(encoding="utf-8", errors="replace").strip()
     except OSError:
-        has_handoff = False
+        text = ""
 
-    if not has_handoff:
-        return (
-            f"[Agent Context] .agent-context/ detected at {agent_dir}, but .agent-context/HANDOFF.md is missing or empty.\n"
-            "Read .agent-context/PROGRESS.md before doing work. Create or refresh .agent-context/HANDOFF.md when "
-            "starting a meaningful task. Load other .agent-context files on demand."
-        )
+    if not text:
+        return f"[Agent Context] .agent-context/ at {agent_dir}; HANDOFF.md is missing or empty."
 
+    capsule, caveat = build_capsule(text)
     return (
-        f"[Agent Context] .agent-context/ detected at {agent_dir}. Minimal handoff from .agent-context/HANDOFF.md:\n\n"
-        f"{read_handoff(handoff_path)}\n\n"
-        "Resume from the handoff first. Read .agent-context/PROGRESS.md for project-level status if needed; "
-        "load other .agent-context files on demand."
+        f"[Agent Context] .agent-context/ at {agent_dir}. "
+        f"Session-start capsule from HANDOFF.md:\n\n{capsule}{caveat}"
     )
 
 

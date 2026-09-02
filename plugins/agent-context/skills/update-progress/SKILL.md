@@ -5,7 +5,7 @@ description: Update .agent-context/PROGRESS.md as the rolling project ledger.
 
 # Update Progress
 
-Use when starting/finishing work, changing focus/backlog/blockers, syncing context, or answering status.
+Use when finishing work, changing focus/backlog/blockers, syncing context, or answering status.
 
 ## Instructions
 
@@ -13,7 +13,7 @@ Use when starting/finishing work, changing focus/backlog/blockers, syncing conte
 2. Status-only and unchanged: report; do not rewrite.
 3. Otherwise rewrite using the template.
 4. Keep recent detail; compact old work.
-5. Refresh `HANDOFF.md` if next action, validation, touched files, or blockers changed.
+5. Refresh `HANDOFF.md` if next action, validation, or blockers changed.
 
 ## Template
 
@@ -48,6 +48,6 @@ Use when starting/finishing work, changing focus/backlog/blockers, syncing conte
 - Use real dates from the system.
 - Keep `Current Focus` singular.
 - Keep descriptions one line.
-- Tactical next action, touched files, latest validation -> `HANDOFF.md`.
+- Tactical next action and latest validation -> `HANDOFF.md`.
 - Do not hide blockers.
 - Report focus, completed change, blockers, and next backlog item when relevant.

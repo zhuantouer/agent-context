@@ -50,7 +50,11 @@ def should_skip_turn(host, payload):
 
 
 def changed_paths(root):
-    """Return worktree paths reported by git status, excluding the handoff itself."""
+    """Return worktree paths reported by git status, excluding the memory directory.
+
+    Bookkeeping writes are not work the handoff has to describe, so a turn that
+    only touched `.agent-context/` must not ask for another handoff rewrite.
+    """
     try:
         status = subprocess.run(
             ["git", "-C", str(root), "status", "--porcelain"],
@@ -73,7 +77,7 @@ def changed_paths(root):
         if " -> " in rel:
             rel = rel.split(" -> ", 1)[1].strip()
         rel = rel.strip('"')
-        if not rel or rel == ".agent-context/HANDOFF.md":
+        if not rel or rel.startswith(".agent-context/"):
             continue
         paths.append(root / rel)
     return paths
@@ -124,8 +128,8 @@ def handoff_note(root, paths):
     if not handoff_is_stale(root / ".agent-context" / "HANDOFF.md", latest_mtime(paths)):
         return None
     return (
-        "Refresh `.agent-context/HANDOFF.md` with the latest task state, touched files, "
-        "validation, and blockers. Keep it concise; if there is no active task, say so."
+        "Refresh `.agent-context/HANDOFF.md`: task state, next action, validation, "
+        "blockers. Keep it concise; if there is no active task, say so."
     )
 
 

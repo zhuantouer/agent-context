@@ -5,20 +5,22 @@ alwaysApply: true
 
 # Agent Context Protocol
 
-Use `.agent-context/` as durable project memory. Keep it concise; treat it as a map, not proof. Verify source before critical edits; record unverified entries as assumptions, not facts.
+Use `.agent-context/` as durable project memory. Keep it concise; it is a map, not proof. Record unverified entries as assumptions, not facts.
+
+Scale this protocol to the request: a question wants an answer, not an architecture checkpoint, a memory write, or an invented next step.
 
 ## Startup
 
-Missing `.agent-context/`: run the `bootstrap-context` skill first. Otherwise resume from the session-start summary and `HANDOFF.md`, then `PROGRESS.md` if needed; load other files on demand.
+Missing `.agent-context/`: run the `bootstrap-context` skill before substantive work. Otherwise resume from the session-start capsule; it is meant to be sufficient, so read `HANDOFF.md` only when you need a detail it does not carry. Load other files on demand.
 
 ## Ownership
 
-Files live in `.agent-context/`. One owner per fact; do not duplicate. Write a file whenever the facts it owns change.
+One canonical owner per fact; elsewhere link or summarize only when resumption needs it. Write a fact that outlives this turn and that its owner does not already carry; skip trivia and rewordings. Every file below is optional: write one when you have something for it, not to fill the table.
 
 | File | Owns — write when |
 |------|-------------------|
-| `HANDOFF.md` | Current task: status, next action, touched files, latest validation, blockers. Rewrite on start/pause/block/validate/substantial edit. |
-| `PROGRESS.md` | Rolling ledger: focus, done, in progress, backlog, blockers, last sync. Update on start/finish work, backlog or blocker change. |
+| `HANDOFF.md` | Current task: status, next action, blockers, latest validation, user instructions. Rewrite before pause/block/handoff or when task state materially changes. |
+| `PROGRESS.md` | Rolling ledger: focus, done, in progress, backlog, blockers, last sync. Update when work finishes or focus/backlog/blockers materially change. |
 | `ARCHITECTURE.md` | Project map, entry points, boundaries, data flow, terms |
 | `COMMANDS.md` | Commands, validation profile, slow/flaky notes, command-specific failure modes |
 | `CONFIG.md` | Env names, secret locations, services, setup paths; never values |
@@ -27,31 +29,30 @@ Files live in `.agent-context/`. One owner per fact; do not duplicate. Write a f
 
 ## Architecture Checkpoint
 
-Before non-trivial edits, name the module that should own the change (check `ARCHITECTURE.md`). Split by responsibility, not by length: prefer an existing seam or a focused new module over growing an entry-point/"catch-all" file, but do not fragment one concern into many tiny files or add premature abstraction. Keep dependency direction one-way; avoid cycles.
+Before non-trivial edits, identify the owning module; consult `ARCHITECTURE.md` when present and current, but prefer source when they differ.
 
-## Safety
+## Execution
 
-Ask before core behavior changes, architecture choices, critical config edits, irreversible operations, or unclear intent.
-Fix the defect class, not only the reported spot: before calling a fix done, search for the same pattern in sibling call sites, parallel modules, other UI surfaces, and each supported host or platform, then report every occurrence found. Repair the ones that share the root cause and are equally safe to verify; list the rest with locations and ask.
-Keep edits surgical: every changed line must trace to the request, that same-defect sweep, or resulting cleanup. Mention issues with a different root cause; do not fix them unless asked.
-Do not guess behavior, invent commands, skip checks, or claim completion without validation. Use `COMMANDS.md` for checks. Store latest results in `HANDOFF.md`, reusable rules in `COMMANDS.md`.
-Before asserting a conclusion, enumerate what the source actually contains; quantified claims ("most", "barely used", "collapsed to one") need a computed number, otherwise mark them as impressions.
+Ask only when a missing user choice would materially change behavior, architecture, critical config, or an irreversible outcome; the change explicitly requested needs no re-approval.
+For a behavior bug, first capture the failure with a minimal reproduction or failing check, then rerun that same check after the fix to confirm it passes. If reproduction is unsafe or impossible, say so and name the substitute evidence.
+Fix the defect class, not only the reported spot: proportionate to risk, search locations reasonably likely to share the root cause. Report every relevant occurrence found. Repair the ones equally safe to verify; list the rest with locations and ask.
+Keep edits surgical: every changed line must trace to the request, that same-defect sweep, or resulting cleanup. Report issues with a different root cause, with locations; do not fix them unless asked.
+Do not assert unverified behavior or invent commands. Validate in proportion to risk; if a relevant check cannot run, say so. Use `COMMANDS.md` when present; otherwise derive checks from project configuration.
 Never store secret values.
+
+## Evidence
+
+Never generalize from the first match: read the rest of the list or section it came from. Run a search that backs a claim across the full scope claimed. Quantified claims ("most", "barely used", "collapsed to one") need a computed number, otherwise mark them as impressions.
+Distinguish facts, assumptions, and recommendations. When uncertain, state what is unknown and what evidence is missing; never turn uncertainty into certainty for brevity.
 
 ## Response Style
 
-Answer first, then explain. Default order: conclusion, key evidence, next step.
-Use plain, familiar language in the user's language. Explain unfamiliar technical terms in one plain sentence when first used; translate borrowed terminology into the current project's terms.
-Remove pleasantries, repeated points, empty introductions, and redundant summaries. Do not restate the user's question.
-Keep each paragraph focused on one point. For multiple findings, use bullets in a consistent order: problem, impact, recommendation.
-Distinguish facts, assumptions, and recommendations. When uncertain, state what is unknown and what evidence is missing; never turn uncertainty into certainty for brevity.
-Preserve details that affect correctness: negation, conditions, exceptions, numbers, units, paths, commands, and decisive error text.
-Prefer complete explanations for security risks, irreversible actions, complex procedures, or when the user asks for clarification.
+Reply in the user's language, but write each term the way its field does.
+When you report findings, risks, or options, each carries its own recommendation: act, defer, or safe to ignore with the reason. For unresolved or actionable work, end with one recommended next step.
+Preserve details that affect correctness: negation, conditions, numbers, units, paths, commands, and decisive error text. Explain fully for security risks and irreversible actions.
 
 ## Hygiene
 
-- `HANDOFF.md` is a current snapshot, not a log. Rewrite it. Next action must be concrete and verifiable, preferably naming a `COMMANDS.md` check.
+- `HANDOFF.md` is a snapshot, not a log; its next action must be concrete and verifiable, preferably naming a `COMMANDS.md` check.
 - `PROGRESS.md` is a rolling ledger; compact old work.
 - `MEMORY.md` stores reusable lessons, not transcripts; consolidate repeats.
-- Remove stale handoff details when there is no active task.
-- End meaningful work with accurate `HANDOFF.md` and `PROGRESS.md`.

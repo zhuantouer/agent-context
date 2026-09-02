@@ -17,8 +17,8 @@ Use when `.agent-context/` is missing, the user asks to initialize/refresh conte
 
 ## Create Files
 
-- `HANDOFF.md`: current task, status, next action with verification, touched files, latest validation, freshness, blockers, user instructions, notes.
-- `ARCHITECTURE.md`: overview, stack, structure, entry points, data flow, and a module map (each module's responsibility + boundary) with a `last verified` date so agents can route changes to the right module.
+- `HANDOFF.md`: current task, status, next action with verification, blockers, latest validation (including what source was checked), user instructions, notes. Follow the `handoff` skill's template; the session-start hook injects these fields.
+- `ARCHITECTURE.md`: overview, stack, structure, entry points, data flow, and a module map (each module's responsibility + boundary). Record `verified against: <commit or "(no git)">` plus the paths the map covers, so a later agent can tell whether those paths moved — a bare date only proves someone typed a date.
 - `COMMANDS.md`: setup/dev/test/lint/type/build/deploy commands, validation profile, scripts, command notes.
 - `CONFIG.md`: env names, key locations, services, local setup; no secret values.
 - `CONVENTIONS.md`: style, preferences, boundaries, review habits, vocabulary, and modular-design habits (one responsibility per file, split by responsibility not length, one-way dependencies, no over-fragmentation).
@@ -28,5 +28,5 @@ Use when `.agent-context/` is missing, the user asks to initialize/refresh conte
 ## Rules
 
 - Use real dates.
-- Minimal project: still create all files with concise "(none detected)" entries.
+- Always create `HANDOFF.md` and `PROGRESS.md`. Create the other five only where the project has facts to record; a file of "(none detected)" entries costs every later agent a read and teaches nothing. Name the skipped ones in the report so the user knows they are available.
 - Useful for future agents, not comprehensive docs.

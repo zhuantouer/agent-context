@@ -1,11 +1,11 @@
 ---
 name: handoff
-description: Rewrite .agent-context/HANDOFF.md as the current task snapshot before pause, compaction, blockers, validation, or handoff.
+description: Rewrite .agent-context/HANDOFF.md as the current task snapshot before a pause, block, or handoff, or when task state materially changes.
 ---
 
 # Handoff
 
-Use before pauses, new chats, likely compaction, blockers, direction changes, substantive edits, validation, or explicit handoff requests.
+The protocol's `Ownership` table owns the triggers. Beyond them, also use before a new chat or likely compaction, and on explicit request.
 
 ## Instructions
 
@@ -30,15 +30,10 @@ Use before pauses, new chats, likely compaction, blockers, direction changes, su
 ## Next Action
 [Concrete next step + verification.]
 
-## Touched Files
-- `[path]` — [why it matters]
-
 ## Validation
 - Last run: `[command]` — [result]
 - Still needed: [checks, or "(none)"]
-
-## Source Freshness
-[Source/context checked, or "(not checked)"]
+- Source checked: [what was read and when, or "(not checked)"]
 
 ## Blockers
 [Blocker, missing decision, failing check, or "(none)"]
@@ -57,3 +52,6 @@ Use before pauses, new chats, likely compaction, blockers, direction changes, su
 - Do not add Goal/Verify fields; encode verification in `Next Action`.
 - Latest validation here; reusable checks in `COMMANDS.md`.
 - If validation did not run, say why and what remains.
+- Do not list touched files; `git status` and the diff already carry them.
+- Every section above is injected at session start, each clipped to a few hundred characters. Front-load each one: the capsule must be enough to resume, or the next agent pays for both it and the file.
+- A section you invent beyond the template is not injected; the capsule only names it. Put anything a resuming agent needs inside the template's sections.

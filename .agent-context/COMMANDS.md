@@ -5,20 +5,22 @@
 
 ## Development
 - Validate plugin structure (both hosts): `node scripts/validate-template.mjs`
+- Hook behaviour tests (stdlib only, ~1s): `python3 scripts/test-hooks.py`
 
 ## Validation Profile
 - Plugin rules, skills, hooks, manifests, marketplaces, or docs: `node scripts/validate-template.mjs`
-- Hook script changes: the validator, plus `bash -n` on both `.sh` entry points, plus the hook smoke tests below.
+- Hook script changes: the validator, plus `python3 scripts/test-hooks.py`, plus `bash -n` on both `.sh` entry points. The smoke tests below stay useful for eyeballing real output, but the test suite is what must pass.
+- `handoff` skill template changes: `python3 scripts/test-hooks.py` — it asserts the template still defines every field the session-start capsule injects.
 - Docs-only changes: manual review; run structure validation if plugin metadata, skills, hooks, or rules changed.
 
 ## Hook Smoke Tests
 Run from the repository root with `S=plugins/agent-context/hooks/scripts` and `R=$PWD`.
 
-- Cursor session start (expect `additional_context`, no protocol):
+- Cursor session start (expect `additional_context` with the resume capsule, no protocol; ~1350 chars on this repo's handoff, hard ceiling 1850). Note the Codex line below invokes the Python directly — `session-start.sh` hard-codes the `cursor` argument and silently ignores any argument you append:
   `echo "{\"workspace_root\":\"$R\"}" | bash $S/session-start.sh`
-- Codex session start (expect `hookSpecificOutput.additionalContext` containing the protocol and the handoff, under the 10000-char limit):
+- Codex session start (expect `hookSpecificOutput.additionalContext` containing the protocol and the capsule, under the 10000-char limit):
   `echo "{\"cwd\":\"$R\"}" | python3 $S/session-context.py codex`
-- Cursor stop, completed turn (expect `followup_message` when the worktree is dirty and the handoff is stale):
+- Cursor stop, completed turn (expect `followup_message` only when a file **outside** `.agent-context/` is dirty and the handoff is older than it; a turn that touched only `.agent-context/` must stay silent):
   `echo "{\"status\":\"completed\",\"workspace_root\":\"$R\"}" | bash $S/stop-handoff-reminder.sh`
 - Cursor stop, aborted turn (expect `{}`):
   `echo "{\"status\":\"aborted\",\"workspace_root\":\"$R\"}" | bash $S/stop-handoff-reminder.sh`
@@ -35,7 +37,7 @@ The smoke tests only prove the scripts work, not that Codex runs them. To check 
 - Plugin load errors: `sqlite3 ~/.codex/logs_2.sqlite "SELECT datetime(ts,'unixepoch','localtime'), level, substr(feedback_log_body,1,150) FROM logs WHERE target LIKE '%plugins%' AND level='WARN' ORDER BY id DESC LIMIT 10;"` — a `configured non-curated plugin no longer exists in discovered marketplaces` warning means `~/.codex/config.toml` enables a plugin name the marketplace does not declare.
 - Enabled names must match: compare `rg 'agent-context' ~/.codex/config.toml` against the `name` in `~/.agents/plugins/marketplace.json`.
 - In the app: the plugin appears under Plugins, and a new session flashes the `statusMessage` from `hooks/codex-hooks.json` ("Loading agent-context protocol and handoff").
-- Behavioral: ask a fresh session which file owns validation commands and when `HANDOFF.md` must be rewritten. With the protocol injected it answers `COMMANDS.md` and the start/pause/block/validate/substantial-edit triggers without reading any file.
+- Behavioral: ask a fresh session which file owns validation commands and when `HANDOFF.md` must be rewritten. With the protocol injected it answers `COMMANDS.md` and "before pause/block/handoff, or when task state materially changes" without reading any file.
 
 ## Build & Deploy
 - Build: No build step detected.
@@ -48,4 +50,5 @@ The smoke tests only prove the scripts work, not that Codex runs them. To check 
 ## Command Notes
 - Run commands from the repository root unless a command states otherwise.
 - Cursor needs "Developer: Reload Window" after reinstalling; Codex needs a restart and an explicit hook-trust approval before its hooks run.
-- The validator only checks structure. Behavior changes in the hook scripts need the smoke tests above.
+- The validator checks structure and reports the always-applied rule's size: a review warning past 4200 chars and a stronger warning past 6000. Neither size warning fails the run; only objective structure/drift errors do. Hook behaviour is covered by `scripts/test-hooks.py`, which builds a throwaway git repo per test.
+- `scripts/test-hooks.py` commits its fixture before asserting: git collapses an untracked directory into a single `?? .agent-context/` entry, which hides which file a turn actually touched.

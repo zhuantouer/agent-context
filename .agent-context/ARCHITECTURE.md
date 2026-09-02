@@ -7,7 +7,7 @@
 - Language: Markdown rules/skills, JSON manifests, Python hook logic, Bash entry points, Node.js validation
 - Framework: Cursor plugin format + Codex plugin format, from a single package
 - Build tool: none
-- Test framework: `scripts/validate-template.mjs` (structure + host-drift assertions)
+- Test framework: `scripts/validate-template.mjs` (structure, host-drift, always-on size review lines) + `scripts/test-hooks.py` (hook behaviour, stdlib `unittest`)
 
 ## Directory Structure
 - `plugins/agent-context/` — the single plugin package, installed to either host.
@@ -26,18 +26,19 @@
 - `node scripts/validate-template.mjs` — validation.
 
 ## Module Map
-_last verified: 2026-08-03_
+_verified against: working tree at 2026-08-27 (post-`4429f3f`, uncommitted capsule work) — covers `plugins/agent-context/**` and `scripts/**`_
 
 | Module | Responsibility | Boundary |
 |--------|----------------|----------|
-| `rules/agent-context-core.mdc` | The operating protocol: recovery order, file ownership, update triggers, safety, hygiene | Only canonical copy. Cursor loads it as an always-applied rule; the Codex hook reads and injects it. Nothing else may restate it. |
+| `rules/agent-context-core.mdc` | The operating protocol: startup/recovery, file ownership, architecture checkpoint, execution, evidence, response style, hygiene | Only canonical copy. Cursor loads it as an always-applied rule; the Codex hook reads and injects it. Nothing else may restate it. Size is a review signal, not a cap: the validator warns past 4200 chars and warns more strongly past 6000. |
 | `skills/*/SKILL.md` | Focused workflows: bootstrap, sync, progress, handoff | Must stay host-neutral — no `/name` or `$name` invocation prefixes. Enforced by the validator. |
 | `hooks/scripts/hook_payload.py` | Parse a host hook payload; resolve the project directory | Knows each host's field precedence. No product logic. |
-| `hooks/scripts/session-context.py` | Build session-start context: protocol (Codex only) + handoff excerpt | One implementation, host chosen by argv. Cursor omits the protocol because its rule already supplies it. |
+| `hooks/scripts/session-context.py` | Build session-start context: protocol (Codex only) + a fixed-size resume capsule built from selected `HANDOFF.md` fields | One implementation, host chosen by argv. Cursor omits the protocol because its rule already supplies it. Emits state only — never instructions, which the protocol owns. |
 | `hooks/scripts/handoff-signal.py` | Two independent stop signals — stale handoff (high frequency) and oversized touched files (low frequency) | One implementation; hosts differ only in turn gate and output shape. Each signal is computed by its own function so either can be tuned alone. Advisory only: Cursor uses `followup_message`, Codex uses `systemMessage`, never a forced continuation. Fails open. |
 | `hooks/scripts/*.sh` | Cursor entry points | Thin wrappers only, because Cursor's `hooks.json` requires a bare relative path. Codex calls Python directly. |
 | `hooks/hooks.json` / `hooks/codex-hooks.json` | Per-host hook wiring | Separate files: the two hosts use different event names and output schemas. |
-| `scripts/validate-template.mjs` | Structure validation for both hosts + drift assertions | The signal that keeps the single-copy invariants true. |
+| `scripts/validate-template.mjs` | Structure validation for both hosts, drift assertions, and the always-applied rule's size review lines | The signal that keeps the single-copy invariants true. Owns the normal/strong size warnings; growth is allowed and visible, not blocked. |
+| `scripts/test-hooks.py` | Hook behaviour: capsule field selection, per-field clipping, size backstop, stop-signal firing conditions, and the template/capsule contract | Imports the hook modules by path and drives `handoff-signal.py` as a subprocess over a throwaway git repo. Owns behaviour assertions; the validator owns structure. |
 
 ## Data Flow
 The host loads the plugin. Cursor injects the protocol via its always-applied rule and calls the `.sh` hooks; Codex has no rules slot, so its `SessionStart` hook injects the protocol read from `rules/` plus the handoff. Both hosts' hooks funnel into the same Python implementation, which reads the target project's `.agent-context/` state. Skills and the protocol then instruct the agent to write project knowledge back into `.agent-context/`.

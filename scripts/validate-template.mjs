@@ -8,6 +8,26 @@ const repoRoot = process.cwd();
 const errors = [];
 const warnings = [];
 
+// Size limits on the always-applied rule are a review trigger, not a spending cap.
+// The original 3600-char ceiling was justified on cost, and that premise does not
+// hold: measured 2026-09-01, the body is 3566 chars (~890 tokens) — 0.45% of a 200k
+// context window. What actually degrades as the file grows is instruction weight,
+// and this project has recorded that failure twice (2026-07-01: prose conventions
+// get ignored under context pressure; 2026-08-13: a clause that "read as coverage
+// but caught nothing"). A char count is a crude proxy for that, so it warns.
+//
+// Soft line: the size the 2026-08-27 audit judged bloated (4242), rounded down.
+// Crossing it means re-run the clause audit. The second line is a stronger review
+// signal for likely misplaced detail, not a correctness failure: size is too crude
+// a proxy to block a capability the protocol genuinely needs.
+//
+// The audit asks about cost as well as value, because nothing else here does: both
+// stop-hook signals push toward more work and these lines measure resident context,
+// not the work the protocol imposes. A clause with no off-switch for trivial tasks
+// is the growth to cut first (2026-09-01).
+const ALWAYS_ON_SOFT_CHARS = 4200;
+const ALWAYS_ON_STRONG_REVIEW_CHARS = 6000;
+
 function addError(message) {
   errors.push(message);
 }
@@ -23,6 +43,15 @@ async function pathExists(targetPath) {
   } catch {
     return false;
   }
+}
+
+// Mirrors read_protocol() in hooks/scripts/session-context.py: both hosts consume
+// the body without frontmatter, so that is what the budget has to measure.
+function ruleBody(content) {
+  if (!content.startsWith("---")) return content.trim();
+  const frontmatterEnd = content.indexOf("---", 3);
+  if (frontmatterEnd === -1) return content.trim();
+  return content.slice(frontmatterEnd + 3).trim();
 }
 
 async function readJSON(filePath) {
@@ -304,6 +333,18 @@ async function validatePlugin(pluginDir, pluginName) {
         const content = await fs.readFile(path.join(rulesDir, file), "utf8");
         if (!content.includes("description:")) {
           addError(`Rule '${file}': missing frontmatter 'description'`);
+        }
+        if (/^alwaysApply:\s*true\s*$/m.test(content)) {
+          const bodyChars = ruleBody(content).length;
+          if (bodyChars > ALWAYS_ON_STRONG_REVIEW_CHARS) {
+            addWarning(
+              `Rule '${file}': always-applied body is ${bodyChars} chars, past the ${ALWAYS_ON_STRONG_REVIEW_CHARS} strong-review line. Not a failure. Explain why the added capability must stay always-on rather than move into a skill, then audit scope and duplication.`,
+            );
+          } else if (bodyChars > ALWAYS_ON_SOFT_CHARS) {
+            addWarning(
+              `Rule '${file}': always-applied body is ${bodyChars} chars, past the ${ALWAYS_ON_SOFT_CHARS} review line. Not a failure. Re-run the clause audit: does each clause prevent a material observed or predictable failure, does anything duplicate a skill or the Ownership table, and does each clause name a condition that turns it off on trivial work?`,
+            );
+          }
         }
       }
     }
