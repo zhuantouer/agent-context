@@ -2,7 +2,7 @@
 
 Project memory in seven plain markdown files. The agent maintains a `.agent-context/` directory holding the current task handoff, progress ledger, project map, commands, config locations, conventions, and lessons learned.
 
-No index, no database, no MCP server: the hooks are Python standard library only, and the same source installs into both Cursor and Codex.
+No index, no database, no MCP server: the hooks are Python standard library only, and the same source installs into Cursor, Codex, and CodeBuddy.
 
 ## Components
 
@@ -22,10 +22,12 @@ No index, no database, no MCP server: the hooks are Python standard library only
 ## Local testing
 
 ```bash
-./scripts/install-local.sh   # from repo root — copies to ~/.cursor/plugins/local/
+./scripts/install-local.sh            # Cursor → ~/.cursor/plugins/local/
+./scripts/install-local.sh codebuddy  # CodeBuddy → ~/.codebuddy/plugins/
+./scripts/install-local.sh all
 ```
 
-Do **not** symlink from outside `~/.cursor/plugins/local/`; Cursor rejects it. Then **Developer: Reload Window**.
+Do **not** symlink from outside `~/.cursor/plugins/local/`; Cursor rejects it. Then reload the host (**Developer: Reload Window** in Cursor, `/reload-plugins` in CodeBuddy).
 
 ## Git model
 

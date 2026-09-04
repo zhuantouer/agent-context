@@ -45,8 +45,9 @@ async function pathExists(targetPath) {
   }
 }
 
-// Mirrors read_protocol() in hooks/scripts/session-context.py: both hosts consume
-// the body without frontmatter, so that is what the budget has to measure.
+// Mirrors read_protocol() in hooks/scripts/session-context.py: every host that
+// consumes the rule uses the body without frontmatter, so that is what the
+// budget has to measure.
 function ruleBody(content) {
   if (!content.startsWith("---")) return content.trim();
   const frontmatterEnd = content.indexOf("---", 3);
@@ -163,6 +164,103 @@ async function validateCodexMarketplace() {
   }
 }
 
+async function validateCodebuddyMarketplace() {
+  const marketplacePath = path.join(repoRoot, ".codebuddy-plugin", "marketplace.json");
+  if (!(await pathExists(marketplacePath))) {
+    addError(".codebuddy-plugin/marketplace.json not found (CodeBuddy marketplace)");
+    return;
+  }
+
+  const marketplace = await readJSON(marketplacePath);
+  if (!marketplace) {
+    addError(".codebuddy-plugin/marketplace.json is invalid JSON");
+    return;
+  }
+
+  if (!marketplace.name) {
+    addError("codebuddy marketplace.json: missing 'name'");
+  }
+
+  if (!marketplace.plugins || !Array.isArray(marketplace.plugins)) {
+    addError("codebuddy marketplace.json: missing or invalid 'plugins' array");
+    return;
+  }
+
+  for (const plugin of marketplace.plugins) {
+    if (!plugin.name) {
+      addError("codebuddy marketplace.json: plugin entry missing 'name'");
+      continue;
+    }
+    if (!plugin.description) {
+      addError(`codebuddy marketplace.json: plugin '${plugin.name}' missing 'description'`);
+    }
+
+    const sourcePath = typeof plugin.source === "string" ? plugin.source : plugin.source?.path;
+    if (typeof sourcePath !== "string") {
+      addError(`codebuddy marketplace.json: plugin '${plugin.name}' missing 'source'`);
+      continue;
+    }
+    if (!sourcePath.startsWith("./")) {
+      addError(`codebuddy marketplace.json: plugin '${plugin.name}' source must start with './'`);
+    }
+
+    const pluginDir = path.resolve(repoRoot, sourcePath);
+    if (!(await pathExists(pluginDir))) {
+      addError(`codebuddy marketplace.json: plugin '${plugin.name}' source path does not exist: ${sourcePath}`);
+      continue;
+    }
+
+    await validateCodebuddyPlugin(pluginDir, plugin.name);
+  }
+}
+
+async function validateCodebuddyPlugin(pluginDir, pluginName) {
+  const manifestPath = path.join(pluginDir, ".codebuddy-plugin", "plugin.json");
+  if (!(await pathExists(manifestPath))) {
+    addError(`CodeBuddy plugin '${pluginName}': missing .codebuddy-plugin/plugin.json`);
+    return;
+  }
+
+  const manifest = await readJSON(manifestPath);
+  if (!manifest) {
+    addError(`CodeBuddy plugin '${pluginName}': plugin.json is invalid JSON`);
+    return;
+  }
+
+  for (const field of ["name", "version", "description"]) {
+    if (!manifest[field]) {
+      addError(`CodeBuddy plugin '${pluginName}': plugin.json missing required field '${field}'`);
+    }
+  }
+
+  const pathFields = ["skills", "hooks", "commands", "agents", "mcpServers"];
+  for (const field of pathFields) {
+    const value = manifest[field];
+    const paths = Array.isArray(value) ? value : typeof value === "string" ? [value] : [];
+    for (const rel of paths) {
+      if (typeof rel !== "string") continue;
+      if (!rel.startsWith("./")) {
+        addError(`CodeBuddy plugin '${pluginName}': '${field}' entry '${rel}' must start with './'`);
+      }
+      if (!(await pathExists(path.join(pluginDir, rel)))) {
+        addError(`CodeBuddy plugin '${pluginName}': '${field}' path not found: ${rel}`);
+      }
+    }
+  }
+
+  const hooksRel = typeof manifest.hooks === "string" ? manifest.hooks : "./hooks/hooks.json";
+  if (hooksRel.replace(/^\.\//, "") === "hooks/hooks.json") {
+    addError(
+      `CodeBuddy plugin '${pluginName}': hooks must not point at hooks/hooks.json (that file is Cursor's camelCase config)`,
+    );
+  }
+  await validateClaudeStyleHooks(pluginDir, pluginName, hooksRel, {
+    envVar: "CODEBUDDY_PLUGIN_ROOT",
+    hostArg: "codebuddy",
+    label: "CodeBuddy",
+  });
+}
+
 async function validateCodexPlugin(pluginDir, pluginName) {
   const manifestPath = path.join(pluginDir, ".codex-plugin", "plugin.json");
   if (!(await pathExists(manifestPath))) {
@@ -204,65 +302,82 @@ async function validateCodexPlugin(pluginDir, pluginName) {
   await validateCodexHooks(pluginDir, pluginName, hooksRel);
 }
 
-async function validateCodexHooks(pluginDir, pluginName, hooksRel) {
+async function validateClaudeStyleHooks(pluginDir, pluginName, hooksRel, options) {
+  const { envVar, hostArg, label } = options;
   const hooksPath = path.join(pluginDir, hooksRel);
   if (!(await pathExists(hooksPath))) return;
 
   const hooksJson = await readJSON(hooksPath);
   if (!hooksJson) {
-    addError(`Codex plugin '${pluginName}': ${hooksRel} is invalid JSON`);
+    addError(`${label} plugin '${pluginName}': ${hooksRel} is invalid JSON`);
     return;
   }
 
   const events = hooksJson.hooks;
   if (!events || typeof events !== "object") {
-    addError(`Codex plugin '${pluginName}': ${hooksRel} missing 'hooks' object`);
+    addError(`${label} plugin '${pluginName}': ${hooksRel} missing 'hooks' object`);
     return;
   }
 
+  const envPattern = new RegExp(`\\$\\{${envVar}[^}]*\\}([^"'\\s]+)`);
+
   for (const [eventName, matchers] of Object.entries(events)) {
-    // Codex events are PascalCase; a camelCase key means Cursor config leaked in.
+    // Claude-family events are PascalCase; a camelCase key means Cursor config leaked in.
     if (/^[a-z]/.test(eventName)) {
       addError(
-        `Codex plugin '${pluginName}': ${hooksRel} event '${eventName}' looks like a Cursor event name (Codex uses PascalCase, e.g. SessionStart)`,
+        `${label} plugin '${pluginName}': ${hooksRel} event '${eventName}' looks like a Cursor event name (${label} uses PascalCase, e.g. SessionStart)`,
       );
     }
     if (!Array.isArray(matchers)) {
-      addError(`Codex plugin '${pluginName}': ${hooksRel} event '${eventName}' must be an array`);
+      addError(`${label} plugin '${pluginName}': ${hooksRel} event '${eventName}' must be an array`);
       continue;
     }
 
     for (const matcher of matchers) {
-      // Codex nests the commands one level deeper than Cursor does.
+      // Claude-family hosts nest the commands one level deeper than Cursor does.
       if (!Array.isArray(matcher?.hooks)) {
         addError(
-          `Codex plugin '${pluginName}': ${hooksRel} event '${eventName}' entry missing nested 'hooks' array`,
+          `${label} plugin '${pluginName}': ${hooksRel} event '${eventName}' entry missing nested 'hooks' array`,
         );
         continue;
       }
       for (const hook of matcher.hooks) {
         if (hook.type !== "command") {
-          addError(`Codex plugin '${pluginName}': ${hooksRel} event '${eventName}' hook missing "type": "command"`);
+          addError(`${label} plugin '${pluginName}': ${hooksRel} event '${eventName}' hook missing "type": "command"`);
           continue;
         }
         if (typeof hook.command !== "string") {
-          addError(`Codex plugin '${pluginName}': ${hooksRel} event '${eventName}' hook missing 'command'`);
+          addError(`${label} plugin '${pluginName}': ${hooksRel} event '${eventName}' hook missing 'command'`);
           continue;
         }
-        const scriptMatch = hook.command.match(/\$\{PLUGIN_ROOT[^}]*\}([^"'\s]+)/);
+        const hostToken = new RegExp(`(?:^|\\s)${hostArg}(?:\\s|"|$)`);
+        if (!hostToken.test(hook.command)) {
+          addError(
+            `${label} plugin '${pluginName}': ${hooksRel} event '${eventName}' command must pass '${hostArg}' as the host argument`,
+          );
+        }
+        const scriptMatch = hook.command.match(envPattern);
         if (!scriptMatch) {
           addWarning(
-            `Codex plugin '${pluginName}': ${hooksRel} event '${eventName}' command does not reference \${PLUGIN_ROOT}; it may not resolve when installed`,
+            `${label} plugin '${pluginName}': ${hooksRel} event '${eventName}' command does not reference \${${envVar}}; it may not resolve when installed`,
           );
           continue;
         }
         const scriptPath = path.join(pluginDir, scriptMatch[1]);
         if (!(await pathExists(scriptPath))) {
-          addError(`Codex hook '${eventName}': script not found: ${scriptMatch[1]}`);
+          addError(`${label} hook '${eventName}': script not found: ${scriptMatch[1]}`);
         }
       }
     }
   }
+}
+
+async function validateCodexHooks(pluginDir, pluginName, hooksRel) {
+  await validateClaudeStyleHooks(pluginDir, pluginName, hooksRel, {
+    envVar: "PLUGIN_ROOT",
+    hostArg: "codex",
+    label: "Codex",
+  });
 }
 
 async function validateHostNeutrality(pluginDir, pluginName) {
@@ -460,6 +575,7 @@ async function main() {
 
   await validateMarketplace();
   await validateCodexMarketplace();
+  await validateCodebuddyMarketplace();
 
   // Check for logo
   const logoPath = path.join(repoRoot, "plugins", "agent-context", "assets", "logo.svg");

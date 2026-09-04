@@ -1,6 +1,6 @@
 # agent-context
 
-**Project memory for AI coding agents, in seven markdown files.** No index, no database, no daemon, no MCP server — the agent reads and writes plain files in `.agent-context/`, and one source installs into both [Cursor](https://cursor.com/cn/docs/plugins) and Codex.
+**Project memory for AI coding agents, in seven markdown files.** No index, no database, no daemon, no MCP server — the agent reads and writes plain files in `.agent-context/`, and one source installs into [Cursor](https://cursor.com/cn/docs/plugins), Codex, and [CodeBuddy](https://www.codebuddy.cn/docs/cli/plugins).
 
 Most tools in this space solve session amnesia with infrastructure: knowledge graphs, embedded SQLite, vector search, MCP servers exposing dozens of tools. This one is a rule file, four skills, and two lifecycle hooks written against the Python standard library. Nothing to install, nothing to run, nothing to keep in sync. If your agent can read a file, it works.
 
@@ -71,17 +71,19 @@ You should notice practical changes in agent behavior:
 
 ### Option A: Local plugin (recommended for development)
 
-Per [Cursor plugin docs](https://cursor.com/docs/plugins#test-plugins-locally), copy the plugin into `~/.cursor/plugins/local/`:
-
 ```bash
 git clone https://github.com/yourusername/agent-context.git ~/workspace/agent-context
 cd ~/workspace/agent-context
-./scripts/install-local.sh
+./scripts/install-local.sh          # Cursor (default)
+./scripts/install-local.sh codebuddy
+./scripts/install-local.sh all      # Cursor + Codex + CodeBuddy
 ```
 
-> **Important:** Cursor **rejects symlinks** to paths outside `~/.cursor/plugins/local/` for security. Do not use `ln -sf` to your workspace — the plugin will silently fail to load (`0 plugins loaded` in Cursor Plugins log). Re-run `./scripts/install-local.sh` after editing the plugin, then **Developer: Reload Window**.
+**Cursor:** copies into `~/.cursor/plugins/local/`. Cursor **rejects symlinks** to paths outside that directory (`0 plugins loaded` in Cursor Plugins log). Re-run after editing, then **Developer: Reload Window**. Verify under **Settings → Plugins → Installed**.
 
-Verify under **Settings → Plugins → Installed** (not the per-project Skills tab).
+**CodeBuddy:** copies into `~/.codebuddy/plugins/` and, if the `codebuddy` CLI is on `PATH`, adds this repo as a marketplace and installs `agent-context@agent-context-marketplace`. Otherwise add the repo from **Settings → Plugins**, or test with `codebuddy --plugin-dir ./plugins/agent-context`. Then `/reload-plugins`. Protocol comes from the plugin's `rules/`; hooks only inject the handoff capsule.
+
+**Codex:** copies into `~/.codex/plugins/` and runs `codex plugin add agent-context@personal`. Restart Codex and trust plugin hooks; without trust there is no protocol injection.
 
 ### Option B: Local marketplace
 
@@ -135,11 +137,11 @@ Bootstrap avoids Unix-only scan commands in generated guidance. Prefer Cursor fi
 
 ## TODO — more hosts
 
-Cursor and Codex work today. Claude Code, OpenCode, and Pi do not yet. PRs welcome; keep changes small and follow the invariants below.
+Cursor, Codex, and CodeBuddy work today. Claude Code, OpenCode, and Pi do not yet. PRs welcome; keep changes small and follow the invariants below.
 
 | Host | Rough approach |
 |------|----------------|
-| **Claude Code** | Closest to Codex. Add `.claude-plugin/plugin.json`, point hooks at the existing Python scripts. Codex's `SessionStart`/`Stop` JSON envelope already matches Claude's; smoke-test that plugin SessionStart actually surfaces `additionalContext` (some Claude builds have dropped it from plugin hooks). |
+| **Claude Code** | Closest to CodeBuddy's hook I/O. Add `.claude-plugin/plugin.json`, point hooks at the existing Python scripts. Smoke-test that plugin SessionStart actually surfaces `additionalContext` (some Claude builds have dropped it from plugin hooks). |
 | **OpenCode** | Thin JS/TS plugin in `opencode.json`. Inject protocol + handoff via `experimental.chat.messages.transform`, register `skills/` via the `config` hook (same pattern as [Superpowers for OpenCode](https://github.com/obra/superpowers/blob/main/docs/README.opencode.md)). Spawn the existing Python hooks instead of rewriting them. |
 | **Pi** | A pi package (`pi.skills` + `pi.extensions`). Inject on `before_agent_start`, advisory nudge on `agent_settled`. Again: call the Python hooks; don't fork the protocol. |
 

@@ -11,6 +11,7 @@ bookkeeping-only turns, and fields going missing without a word.
 """
 
 import importlib.util
+import io
 import json
 import os
 import pathlib
@@ -18,6 +19,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 SCRIPTS = REPO_ROOT / "plugins" / "agent-context" / "hooks" / "scripts"
@@ -33,6 +35,7 @@ def load(name):
 
 
 sc = load("session-context")
+hp = load("hook_payload")
 
 
 def handoff(**sections):
@@ -242,6 +245,99 @@ class StopSignal(unittest.TestCase):
     def test_fails_open_outside_a_project(self):
         with tempfile.TemporaryDirectory() as empty:
             self.assertEqual(self.run_stop(pathlib.Path(empty)), {})
+
+    def run_stop_host(self, host, project, **payload):
+        if host == "cursor":
+            payload.setdefault("status", "completed")
+            payload.setdefault("workspace_root", str(project))
+        else:
+            payload.setdefault("cwd", str(project))
+            if host == "codex":
+                payload.setdefault("last_assistant_message", "done")
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS / "handoff-signal.py"), host],
+            input=json.dumps(payload),
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)
+
+    def test_codebuddy_stop_uses_system_message(self):
+        self.touch(".agent-context/HANDOFF.md", 1_000_000)
+        self.touch("app.py", 2_000_000)
+        result = self.run_stop_host("codebuddy", self.project)
+        self.assertIn("systemMessage", result)
+        self.assertNotIn("followup_message", result)
+        self.assertNotIn("decision", result)
+
+    def test_codebuddy_silent_when_only_memory_files_changed(self):
+        self.touch(".agent-context/HANDOFF.md", 1_000_000)
+        self.touch(".agent-context/PROGRESS.md", 3_000_000)
+        self.assertEqual(self.run_stop_host("codebuddy", self.project), {})
+
+    def test_codex_stop_still_requires_an_assistant_message(self):
+        self.touch(".agent-context/HANDOFF.md", 1_000_000)
+        self.touch("app.py", 2_000_000)
+        self.assertEqual(self.run_stop_host("codex", self.project, last_assistant_message=""), {})
+
+
+class HostDispatch(unittest.TestCase):
+    """CodeBuddy is a hybrid: Cursor-like rules, Claude-like hook I/O."""
+
+    def test_unknown_host_is_rejected(self):
+        with self.assertRaises(SystemExit):
+            hp.parse_host(["handoff-signal.py", "claude"])
+
+    def test_codebuddy_is_a_known_host(self):
+        self.assertEqual(hp.parse_host(["x", "codebuddy"]), "codebuddy")
+
+    def test_codebuddy_omits_protocol(self):
+        with tempfile.TemporaryDirectory() as project:
+            self.assertNotIn("Operating protocol", sc.build_message("codebuddy", project))
+
+    def test_cursor_omits_protocol(self):
+        with tempfile.TemporaryDirectory() as project:
+            self.assertNotIn("Operating protocol", sc.build_message("cursor", project))
+
+    def test_codex_injects_protocol(self):
+        with tempfile.TemporaryDirectory() as project:
+            self.assertIn("Operating protocol", sc.build_message("codex", project))
+
+    def test_codebuddy_session_start_uses_claude_envelope(self):
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            sc.emit("codebuddy", "capsule")
+        payload = json.loads(buf.getvalue())
+        self.assertEqual(payload["hookSpecificOutput"]["additionalContext"], "capsule")
+        self.assertNotIn("additional_context", payload)
+
+    def test_cursor_session_start_keeps_cursor_envelope(self):
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            sc.emit("cursor", "capsule")
+        payload = json.loads(buf.getvalue())
+        self.assertEqual(payload["additional_context"], "capsule")
+        self.assertNotIn("hookSpecificOutput", payload)
+
+
+class CodebuddyPackaging(unittest.TestCase):
+    def test_hooks_file_passes_codebuddy_host(self):
+        path = REPO_ROOT / "plugins" / "agent-context" / "hooks" / "codebuddy-hooks.json"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        commands = [
+            hook["command"]
+            for matchers in data["hooks"].values()
+            for matcher in matchers
+            for hook in matcher["hooks"]
+        ]
+        self.assertTrue(commands)
+        for command in commands:
+            self.assertIn(" codebuddy", command)
+            self.assertIn("${CODEBUDDY_PLUGIN_ROOT}", command)
+            self.assertNotIn(" cursor", command)
+            self.assertNotIn(" codex", command)
 
 
 if __name__ == "__main__":

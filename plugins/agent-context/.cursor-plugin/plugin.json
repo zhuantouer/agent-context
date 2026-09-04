@@ -7,7 +7,7 @@
     "name": "thanezh"
   },
   "license": "MIT",
-  "keywords": ["cursor", "codex", "plugin", "context", "memory", "project-memory", "handoff", "session-handoff", "progress", "validation", "lessons", "agentic", "markdown", "zero-dependency"],
+  "keywords": ["cursor", "codex", "codebuddy", "plugin", "context", "memory", "project-memory", "handoff", "session-handoff", "progress", "validation", "lessons", "agentic", "markdown", "zero-dependency"],
   "logo": "assets/logo.svg",
   "rules": "rules/",
   "skills": "skills/",

@@ -1,20 +1,29 @@
 #!/usr/bin/env python3
 """Host hook payload parsing shared by the session-start and stop hooks.
 
-Cursor and Codex both deliver one JSON object on stdin, but they disagree on
-which field carries the project directory.
+Every host delivers one JSON object on stdin, but they disagree on which field
+carries the project directory and on the stdout envelope the hook must emit.
 """
 
 import json
 import os
 import sys
 
-# Cursor prefers the workspace root; Codex documents `cwd` as the session's
-# working directory.
+# Cursor prefers the workspace root; Codex and CodeBuddy document `cwd` as the
+# session's working directory (Claude-style payload).
 PROJECT_DIR_KEYS = {
     "cursor": ("workspace_root", "project_dir", "cwd"),
     "codex": ("cwd", "workspace_root", "project_dir"),
+    "codebuddy": ("cwd", "workspace_root", "project_dir"),
 }
+
+# Codex and CodeBuddy speak the Claude-style hook envelope (PascalCase events,
+# hookSpecificOutput / systemMessage). Cursor uses its own camelCase JSON.
+CLAUDE_IO_HOSTS = frozenset({"codex", "codebuddy"})
+
+# Codex has no always-applied rules slot, so SessionStart injects the protocol.
+# Cursor and CodeBuddy load rules/agent-context-core.mdc themselves.
+INJECT_PROTOCOL_HOSTS = frozenset({"codex"})
 
 HOSTS = tuple(PROJECT_DIR_KEYS)
 

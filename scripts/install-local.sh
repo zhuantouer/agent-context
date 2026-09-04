@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Install agent-context locally for testing.
 #
-#   ./scripts/install-local.sh [cursor|codex|all]   (default: cursor)
+#   ./scripts/install-local.sh [cursor|codex|codebuddy|all]   (default: cursor)
 #
 # Cursor rejects symlinks whose target is outside ~/.cursor/plugins/local/
 # (see Cursor Plugins log: loadUserLocalPlugin ... rejected: symlink target is outside).
@@ -17,6 +17,7 @@ CODEX_MARKETPLACE="${HOME}/.agents/plugins/marketplace.json"
 CODEX_SOURCE_PATH="./.codex/plugins/${PLUGIN_NAME}"
 # Name used before the Cursor and Codex packages were merged.
 LEGACY_CODEX_NAME="agent-context-codex"
+CODEBUDDY_MARKETPLACE_NAME="agent-context-marketplace"
 
 copy_plugin() {
   local dest="$1"
@@ -117,23 +118,60 @@ install_codex() {
   echo "  Codex asks you to trust plugin hooks before they run; without trust there is no protocol injection"
 }
 
+codebuddy_cli() {
+  if command -v codebuddy >/dev/null 2>&1; then
+    command -v codebuddy
+    return 0
+  fi
+  return 1
+}
+
+# CodeBuddy, like Codex, loads a versioned cache snapshot rather than the
+# marketplace source. `plugin install` re-materializes even when the version is
+# unchanged, so run it always. `--plugin-dir` is the no-CLI fallback.
+activate_codebuddy_plugin() {
+  local cli
+  if ! cli="$(codebuddy_cli)"; then
+    echo "  codebuddy CLI not found; in CodeBuddy IDE add this repo as a marketplace" >&2
+    echo "  (Settings → Plugins) or run: codebuddy --plugin-dir ${PLUGIN_SRC}" >&2
+    return 0
+  fi
+  "$cli" plugin marketplace add "${REPO_ROOT}" 2>&1 | sed 's/^/  /' || true
+  "$cli" plugin install "${PLUGIN_NAME}@${CODEBUDDY_MARKETPLACE_NAME}" --scope user 2>&1 | sed 's/^/  /' || true
+}
+
+install_codebuddy() {
+  local dest="${HOME}/.codebuddy/plugins/${PLUGIN_NAME}"
+  copy_plugin "$dest"
+  echo "Installed ${PLUGIN_NAME} for CodeBuddy: ${dest}"
+  activate_codebuddy_plugin
+  echo "  Next: /reload-plugins in CodeBuddy, or restart CodeBuddy IDE"
+  echo "  Verify: /plugin (Installed tab) or: codebuddy --plugin-dir ${dest}"
+  echo "  Protocol comes from the plugin's rules/; hooks only inject the handoff capsule"
+}
+
 HOST="${1:-cursor}"
 case "$HOST" in
   cursor)
     install_cursor
     echo
-    echo "Codex not installed. Run './scripts/install-local.sh codex' or '... all' to include it."
+    echo "Only Cursor was installed. Run '$0 codex', '$0 codebuddy', or '$0 all' for the others."
     ;;
   codex)
     install_codex
+    ;;
+  codebuddy)
+    install_codebuddy
     ;;
   all)
     install_cursor
     echo
     install_codex
+    echo
+    install_codebuddy
     ;;
   *)
-    echo "Usage: $0 [cursor|codex|all]" >&2
+    echo "Usage: $0 [cursor|codex|codebuddy|all]" >&2
     exit 1
     ;;
 esac

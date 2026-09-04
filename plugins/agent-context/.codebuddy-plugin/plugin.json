@@ -1,0 +1,29 @@
+{
+  "name": "agent-context",
+  "version": "0.1.2",
+  "description": "Project memory as seven plain markdown files: task handoff, project map, commands, and lessons. No index, no database, no MCP server.",
+  "author": {
+    "name": "thanezh"
+  },
+  "license": "MIT",
+  "keywords": [
+    "codebuddy",
+    "cursor",
+    "codex",
+    "context",
+    "memory",
+    "project-memory",
+    "handoff",
+    "session-handoff",
+    "progress",
+    "validation",
+    "lessons",
+    "agentic",
+    "markdown",
+    "zero-dependency"
+  ],
+  "homepage": "https://github.com/thanezh/agent-context",
+  "category": "Productivity",
+  "skills": ["./skills/"],
+  "hooks": "./hooks/codebuddy-hooks.json"
+}

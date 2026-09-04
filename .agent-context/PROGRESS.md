@@ -1,9 +1,10 @@
 # Project Progress
 
 ## Current Focus
-Dual-host (Cursor + Codex) packaging; further hosts tracked as public README TODOs.
+CodeBuddy host adapter: same plugin package, third manifest, hybrid rules+Claude-hooks path.
 
 ## Completed
+- [x] (2026-09-03) Adapted the plugin for CodeBuddy without a second protocol copy. Added `.codebuddy-plugin/plugin.json`, repo marketplace, `hooks/codebuddy-hooks.json`, and `.codebuddy/settings.json` so this repo dogfoods the plugin. CodeBuddy is a hybrid host: protocol via plugin `rules/` (like Cursor), hook I/O via Claude-style JSON (like Codex). SessionStart does not inject the protocol. Installer, validator, and hook tests cover the new host. Live CodeBuddy session still unverified.
 - [x] (2026-09-01) Restored the missing Karpathy bug-verification loop from `multica-ai/andrej-karpathy-skills`: capture a minimal reproduction or failing check before a feasible/proportionate fix, rerun the same check afterward, and state substitute evidence when reproduction is unsafe or unavailable. Reorganized the overloaded `Safety` section into `Execution` (authorization, bug loop, scope, validation, secrets) and `Evidence` (source coverage, facts/assumptions); `Response Style` stayed intact because all three clauses govern output. Rule body 3841 → 4107, still below the 4200 review line.
 - [x] (2026-09-01) Applied the eight-item capability review to the core rule. Evidence reads only relevant material that could change the conclusion; same-defect sweeps target likely locations proportionate to risk; confirmation is reserved for missing material user choices; validation scales to risk and reports unavailable checks; optional `ARCHITECTURE.md`/`COMMANDS.md` no longer act as mandatory dependencies. Memory now has a canonical owner but permits resume summaries, start-time bookkeeping triggers were removed, and next-step recommendations apply only to unresolved/actionable work. The validator's 6000 line is now a strong warning, not an error, and preventive clauses may address predictable failures rather than requiring a prior incident. Rule body 3666 → 3841, below the 4200 review line.
 - [x] (2026-09-01) Audited what the old cap had cost in clarity and restored it (+100 chars, 3566 → 3666, still 534 below the review line). Four real losses: `Scale to the request` had lost its object and no longer named the `Architecture Checkpoint` it scopes; the confirmation exception had lost "explicitly", widening it to cover vague requests; `Startup` still said "run `bootstrap-context` first" and leaned on a clause two sections away for the qualifier, now "before substantive work"; `Response Style` was left unscoped on a coverage claim that held only for the next-step half, now "When you report findings, risks, or options". Also replaced the ambiguous "enumerate what the source actually contains" with wording that states the failure it replays. Re-checked the four earlier deletions against a no-budget standard — all still justified as duplication, none restored.
@@ -36,7 +37,7 @@ Dual-host (Cursor + Codex) packaging; further hosts tracked as public README TOD
 - Decide whether to split `Architecture Checkpoint`, the defect-class sweep, `Response Style`, and the large-file signal into an optional quality layer, leaving the core as pure memory. Deferred 2026-08-27: needs a product-direction call, since a second Cursor rule is also always-applied and only saves tokens if it ships disabled
 - Verify whether Codex's default prompt covers the deleted answer-first ordering; restore those 79 chars if it does not (see the 2026-08-27 open question in `MEMORY.md`)
 - Consider whether the stale-handoff signal should also compare against the last commit, not only the dirty worktree — committing work currently silences it
-- Host adapters (tracked in root README TODO): Claude Code, OpenCode, Pi — PRs welcome
+- Host adapters (tracked in root README TODO): Claude Code, OpenCode, Pi — PRs welcome. CodeBuddy shipped 2026-09-03; confirm a live session before calling it done
 - Rewrite the install sections of `README.md` and `plugins/agent-context/README.md` for both hosts; they still document Cursor only, which now contradicts the dual-host taglines above them
 - Decide whether the hooks should detect a legacy `.agent/` directory left by the old naming and point the user at it, instead of silently treating the project as un-bootstrapped
 - Optional: have `bootstrap-context` offer an `AGENTS.md` pointer for Codex users who do not trust plugin hooks
@@ -46,7 +47,6 @@ Dual-host (Cursor + Codex) packaging; further hosts tracked as public README TOD
 - None. The shell recovered and all previously blocked validation has run.
 
 ## Context Freshness
-- Last sync: 2026-09-01
-- Last sync detail: rule body 4309 chars, past the 4200 review line by decision (strong warning 6000; neither blocks); no clause left with unbounded cost on a trivial task; trigger wording has one canonical copy in the `Ownership` table; `scripts/test-hooks.py` 21 tests
-- Uncommitted: 14 modified files plus untracked `scripts/test-hooks.py`, carrying the whole 08-27 audit and the 09-01/09-02 rounds. `HEAD` still ships the terminology-translation instruction, so the fix reverts on any `git checkout` of the rule. User chose to review the diff before committing.
+- Last sync: 2026-09-03
+- Last sync detail: CodeBuddy adapter installed (`agent-context@agent-context-marketplace`). Validator passed, 32 hook tests passed, `codebuddy plugin validate` passed after `skills: ["./skills/"]`. Live session unverified.
 - Source revision: working tree (uncommitted)

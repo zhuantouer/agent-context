@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Session-start context injection, shared by the Cursor and Codex hosts.
+"""Session-start context injection, shared by every host.
 
-Usage: session-context.py <cursor|codex>
+Usage: session-context.py <cursor|codex|codebuddy>
 
 Reads the host's session-start payload on stdin and prints one JSON object on
-stdout. Cursor already injects the operating protocol through its always-applied
-rule, so only the Codex host prepends the protocol here.
+stdout. Cursor and CodeBuddy already inject the operating protocol through the
+plugin's always-applied rule, so only the Codex host prepends the protocol here.
 """
 
 import json
@@ -16,7 +16,13 @@ import sys
 # regardless of the working directory Python was started in.
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
-from hook_payload import parse_host, read_payload, resolve_project_dir  # noqa: E402
+from hook_payload import (  # noqa: E402
+    CLAUDE_IO_HOSTS,
+    INJECT_PROTOCOL_HOSTS,
+    parse_host,
+    read_payload,
+    resolve_project_dir,
+)
 
 PLUGIN_ROOT = pathlib.Path(__file__).resolve().parents[2]
 PROTOCOL_PATH = PLUGIN_ROOT / "rules" / "agent-context-core.mdc"
@@ -191,7 +197,7 @@ def build_handoff_section(project_dir):
 
 def build_message(host, project_dir):
     sections = []
-    if host == "codex":
+    if host in INJECT_PROTOCOL_HOSTS:
         protocol = read_protocol()
         if protocol:
             sections.append(
@@ -202,7 +208,7 @@ def build_message(host, project_dir):
 
 
 def emit(host, message):
-    if host == "codex":
+    if host in CLAUDE_IO_HOSTS:
         payload = {
             "hookSpecificOutput": {
                 "hookEventName": "SessionStart",

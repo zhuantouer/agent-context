@@ -1,0 +1,20 @@
+{
+  "name": "agent-context-marketplace",
+  "owner": {
+    "name": "thanezh",
+    "email": "thanezh@example.com"
+  },
+  "metadata": {
+    "description": "Lightweight agentic context, task handoff, and validation habits plugin for CodeBuddy",
+    "version": "0.1.2"
+  },
+  "plugins": [
+    {
+      "name": "agent-context",
+      "source": "./plugins/agent-context",
+      "description": "Auto-maintained project context, task handoff, validation habits, and lessons learned",
+      "version": "0.1.2",
+      "category": "Productivity"
+    }
+  ]
+}

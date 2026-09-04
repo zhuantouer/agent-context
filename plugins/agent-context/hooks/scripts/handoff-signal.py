@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Stop-hook signals, shared by the Cursor and Codex hosts.
+"""Stop-hook signals, shared by every host.
 
-Usage: handoff-signal.py <cursor|codex>
+Usage: handoff-signal.py <cursor|codex|codebuddy>
 
 Emits two independent signals: the handoff looks older than the work it should
 describe, and a touched code file has grown large enough to be worth splitting.
@@ -20,7 +20,12 @@ import sys
 # regardless of the working directory Python was started in.
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
-from hook_payload import parse_host, read_payload, resolve_project_dir  # noqa: E402
+from hook_payload import (  # noqa: E402
+    CLAUDE_IO_HOSTS,
+    parse_host,
+    read_payload,
+    resolve_project_dir,
+)
 
 # Conservative large-file signal: flag touched code files past a line threshold,
 # so the agent considers splitting by responsibility. Heuristic only.
@@ -39,13 +44,24 @@ def emit(payload):
 
 def should_skip_turn(host, payload):
     """Only nudge after a turn that actually completed, and never twice in a row."""
-    if host == "codex":
-        # Codex has no status field; an assistant message means the turn produced
-        # output. stop_hook_active means some Stop hook already continued this turn,
-        # so stay quiet rather than repeat the warning on the continuation.
-        if not payload.get("last_assistant_message"):
+    if host in CLAUDE_IO_HOSTS:
+        # Claude-style hosts have no Cursor `status` field; an assistant message
+        # means the turn produced output. stop_hook_active means some Stop hook
+        # already continued this turn, so stay quiet rather than repeat the
+        # warning on the continuation.
+        #
+        # CodeBuddy IDE's payload shape is unverified. Honor Claude skip fields
+        # when present; if neither `status` nor `last_assistant_message` is set,
+        # run (the later dirty-worktree checks still fail open to `{}`).
+        if payload.get("stop_hook_active"):
             return True
-        return bool(payload.get("stop_hook_active"))
+        if payload.get("status") in ("aborted", "error"):
+            return True
+        if "last_assistant_message" in payload and not payload.get("last_assistant_message"):
+            return True
+        if host == "codex" and not payload.get("last_assistant_message"):
+            return True
+        return False
     return payload.get("status") != "completed"
 
 
@@ -154,11 +170,12 @@ def build_notes(root, paths):
 
 def emit_notes(host, notes):
     body = " ".join(notes)
-    if host == "codex":
-        # Codex `Stop` could force a continuation turn via `decision: block`, but the
-        # handoff signal fires on most working turns, so that would roughly double the
-        # turn count. `systemMessage` surfaces the same signal in the UI at no token
-        # cost and leaves the write itself to the protocol's update triggers.
+    if host in CLAUDE_IO_HOSTS:
+        # Claude-style `Stop` could force a continuation turn via `decision: block`,
+        # but the handoff signal fires on most working turns, so that would roughly
+        # double the turn count. `systemMessage` surfaces the same signal in the UI
+        # at no token cost and leaves the write itself to the protocol's update
+        # triggers.
         emit({"systemMessage": f"agent-context — before finishing: {body}"})
     else:
         emit({"followup_message": f"Before finishing: {body}"})

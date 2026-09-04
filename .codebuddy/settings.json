@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "agent-context-marketplace": {
+      "source": {
+        "source": "directory",
+        "path": "."
+      }
+    }
+  },
+  "enabledPlugins": {
+    "agent-context@agent-context-marketplace": true
+  }
+}
