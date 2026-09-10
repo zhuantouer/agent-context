@@ -55,6 +55,7 @@ If you want handoffs shared across a branch or PR, commit them intentionally.
 7. **Use validation profiles** from `COMMANDS.md` before claiming work is done
 8. **Confirm before** risky actions (core logic changes, deletions, new deps)
 9. **Capture experience and failure lessons** so future agents avoid repeating mistakes
+10. **Recommend a commit** once a piece of work is validated, leaving the decision to you
 
 ## How to know it's working
 

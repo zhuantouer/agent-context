@@ -33,6 +33,8 @@ Do **not** symlink from outside `~/.cursor/plugins/local/`; Cursor rejects it. T
 
 Commit shared `.agent-context/` knowledge files when useful, but treat `.agent-context/HANDOFF.md` as local working state by default unless a branch intentionally wants to share the handoff.
 
+At a validated milestone the agent recommends a commit and names what it would cover; it does not commit unless you ask.
+
 ## Validation
 
 From the repository root:

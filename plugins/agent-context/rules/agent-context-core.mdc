@@ -38,6 +38,7 @@ For a behavior bug, first capture the failure with a minimal reproduction or fai
 Fix the defect class, not only the reported spot: proportionate to risk, search locations reasonably likely to share the root cause. Report every relevant occurrence found. Repair the ones equally safe to verify; list the rest with locations and ask.
 Keep edits surgical: every changed line must trace to the request, that same-defect sweep, or resulting cleanup. Report issues with a different root cause, with locations; do not fix them unless asked.
 Do not assert unverified behavior or invent commands. Validate in proportion to risk; if a relevant check cannot run, say so. Use `COMMANDS.md` when present; otherwise derive checks from project configuration.
+At a milestone — a coherent piece of work validated and left in a working state — recommend committing it and say what the commit would cover, so the change stays traceable. Commit only when the user asks; raise it once per milestone, not every turn.
 Never store secret values.
 
 ## Evidence

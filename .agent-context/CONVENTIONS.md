@@ -9,6 +9,7 @@
 ## User Preferences
 - User requested adopting three Karpathy-inspired ideas: observable success signals, surgical edit guidance, and verifiable next actions without rigid Goal/Verify fields.
 - User prefers reducing plugin token cost while preserving complete semantics.
+- User wants a commit recommendation at each validated milestone so work stays traceable; the agent proposes and names the scope, the user authorizes.
 
 ## Project Boundaries
 - `.agent-context/HANDOFF.md` is local working state by default.
@@ -19,6 +20,7 @@
 ## Review and Validation Habits
 - Run `node scripts/validate-template.mjs` for plugin structure changes.
 - Keep latest validation results in `.agent-context/HANDOFF.md`.
+- Before recording a rule change as shipped, confirm it with `git show HEAD:<file>`; the installed copy under `~/.cursor/plugins/local/` diverges.
 
 ## Domain Vocabulary
 - Handoff: current task snapshot for new chats or context compaction.

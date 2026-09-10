@@ -1,18 +1,17 @@
 # Agent Handoff
 
 ## Current Task
-Adapt `agent-context` for CodeBuddy as a third host of the same plugin package.
+Add a milestone commit reminder to the operating protocol so progress stays traceable.
 
 ## Status
-Done in the worktree and installed: `codebuddy plugin install agent-context@agent-context-marketplace` succeeded, `codebuddy plugin validate` passed after `skills` was changed to `["./skills/"]`. Live CodeBuddy session still unverified — no session has confirmed that plugin `rules/*.mdc` injects, or that Stop payload shape matches the skip logic.
+Committed and installed. `Execution` carries one clause: at a coherent, validated, working-state milestone, recommend a commit and name what it would cover; commit only when the user asks; raise it once per milestone. Both READMEs document it. Rule body 4235 → 4486. Behavior in a live session is unverified — no session has yet produced the reminder at a milestone.
 
 ## Next Action
-In CodeBuddy, run `/reload-plugins` (or restart the IDE). Ask a fresh session which file owns validation commands — it must answer `COMMANDS.md` without reading a file if the rule loaded. If it cannot, the flat `.mdc` may not be discovered and the Codex-style SessionStart injection becomes the fallback to discuss.
+Reload Cursor (Developer → Reload Window), then at the next validated milestone check that the reply recommends a commit and names its scope without being asked. If it does not, the clause is prose with no enforcing mechanism and belongs in the clause audit `node scripts/validate-template.mjs` prompts for.
 
 ## Validation
-- Last run: `node scripts/validate-template.mjs` — passed (rule-size warning at 4235 chars, expected). `python3 scripts/test-hooks.py` — 32 passed. `codebuddy plugin validate ./plugins/agent-context` — passed. `./scripts/install-local.sh codebuddy` — marketplace added, plugin installed.
-- Still needed: a live CodeBuddy session (rule injection + stop signal).
-- Source checked: CodeBuddy docs (Rules page, plugin reference, marketplace, directory structure, IDE 4.5.0/4.7.2 release notes) on 2026-09-03; CLI validator vs published schema.
+- Last run: `node scripts/validate-template.mjs` — passed, with the expected size warning (body 4486, past the advisory 4200 review line). `python3 scripts/test-hooks.py` — 32 passed. `./scripts/install-local.sh` — Cursor copy refreshed.
+- Not covered: no test asserts the new clause; it is prose with no invariant, like the rest of `Execution`.
 
 ## Blockers
 (none)
@@ -21,4 +20,4 @@ In CodeBuddy, run `/reload-plugins` (or restart the IDE). Ask a fresh session wh
 Replies must carry recommendations, not just conclusions. Judge the design as a whole rather than patching rules line by line. When a reviewer disagrees, say which points are accepted, which are rejected with reasons, and which need the user's decision. The goal is the capability, not the budget — do not let a size limit block protocol work.
 
 ## Notes for Next Agent
-CodeBuddy is hybrid: protocol via `rules/` like Cursor, hook JSON like Codex. Do not copy Codex's SessionStart protocol injection — that would double-load on IDE. `plugin.json` has no `rules` field; discovery is the `rules/` directory. `skills` must be an array (`["./skills/"]`); `hooks` stays a string to `./hooks/codebuddy-hooks.json`. Stop is `systemMessage`, never `decision: block`. Unverified: whether a flat `.mdc` loads, and whether IDE Stop sends `status` or `last_assistant_message`.
+The reminder deliberately lives in the rule, not the stop hook: `git status --porcelain` cannot judge "milestone", and a nudge on every dirty turn is the every-turn-notification class rejected 2026-08-27. Do not move it into a hook without new evidence. Also: `~/.cursor/plugins/local/agent-context/` is not evidence of what the repo ships — a two-part terminology clause recorded as shipped on 2026-09-02 existed only there, and the user had deleted it on purpose; both records are corrected.
