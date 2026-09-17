@@ -7,10 +7,10 @@ Keep agent-assisted research and execution goal-directed across sessions. Succes
 One current-state map; daily logs own detail. No separate handoff, automatic daily files or calendar-based resume. Preserve capability and decisive context. Do not auto-commit or refresh installed plugins; leave unrelated plugin caches untouched. Preferences: CONVENTIONS.md.
 
 ## Current State
-2026-09-17, worktree based on `11823a4`: review fixes implemented—complete resume map, unclosed-fence diagnostics, plugin-version checks and clean install copies. 63 regressions plus structure/Shell checks passed; canonical rule and legacy compatibility retained. Decision-only replay returned 5/6 responses; intervention baseline timed out and host context is not fully controlled. Execution safety, savings and comparative efficacy remain unverified. Not committed or installed. [Fix evidence](worklog/2026-09-17.md#review-follow-up); [replay evidence](worklog/2026-09-17.md#minimal-decision-replay).
+2026-09-17: `a5d0de8` is the committed baseline. Prompt compression plus review corrections clarify read-before-edit, safe fixes, convention content and revision/scope evidence. Sync triggers now appear in its description; no skill merger or removed Recordkeeping safeguards. Rule body 7678→6741 chars; 63 regressions and structure checks pass. Not committed or installed. Equal compliance and better skill selection remain unverified; earlier replay was inconclusive. [Review evidence](worklog/2026-09-17.md#prompt-review-corrections); [replay limits](worklog/2026-09-17.md#minimal-decision-replay).
 
 ## Next Check
-Recommend a milestone commit covering the map/log refactor, accepted review fixes and evidence. For behavior acceptance, complete the intervention baseline with controlled host context and tool-enabled isolated tasks, then verify actual plugin loading. Preserve output equivalence and measure total cost before deciding whether to split the rule.
+Recommend committing the four compressed prompt files and this evidence. Before claiming equal behavior, compare against `a5d0de8` in controlled fresh sessions: skill triggers, safe intervention, normal waiting and simple-question restraint. Verify actual plugin loading only after authorized refresh.
 
 ## Milestones
 - 2026-09-17 — Proactive-efficiency guidance added; recovery/packaging fixes validated. Decision-only replay remains preliminary. [Guidance](worklog/2026-09-17.md#proactive-lossless-efficiency), [review fixes](worklog/2026-09-17.md#review-follow-up).

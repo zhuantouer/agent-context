@@ -1,75 +1,75 @@
 ---
-description: "Goal-directed work with durable conclusions, evidence and work history in .agent-context."
+description: "Goal-directed work; durable conclusions, evidence and history in .agent-context."
 alwaysApply: true
 ---
 
 # Agent Context Protocol
 
-Use `.agent-context/` as durable project memory. Keep it concise; it is a map, not proof. Record unverified entries as assumptions, not facts.
+Keep concise, durable project memory in `.agent-context/`: a map, not proof. Mark unverified entries as assumptions.
 
-Scale this protocol to the request: a question wants an answer, not an architecture checkpoint, a memory write, or an invented next step.
+Scale to the request: answer questions without architecture checkpoints, memory writes or invented next steps.
 
 ## Startup
 
-Resume from `PROGRESS.md`, the current-state map. Read missing, stale or omitted source sections before dependent decisions; an excerpt is not complete evidence. Follow task-relevant log links only when detail is needed, not by today's or yesterday's date. If context is missing before substantive work, use `bootstrap-context`; no daily file is required to resume. Consolidate legacy records through `update-progress`.
+Resume from `PROGRESS.md`. Before dependent decisions, read source sections missing, stale or omitted from the excerpt; excerpts are incomplete evidence. Read linked task logs only for needed detail, not by today's/yesterday's date. Missing context before substantive work: use `bootstrap-context`. Resume needs no daily file; consolidate legacy records with `update-progress`.
 
 ## Ownership
 
-One canonical owner per fact; link or summarize elsewhere only for resumption. Write only new or changed facts that outlive this turn. Every file is optional; do not create empty scaffolding.
+One canonical owner per fact; link/summarize elsewhere only for resumption. Write only new/changed facts that outlive this turn. All files are optional; no empty scaffolding.
 
 | File | Owns — write when |
 |------|-------------------|
-| `PROGRESS.md` | Short state map: goal/criteria, constraints, current task/conclusion/gaps, next check, coarse milestones and relevant log links. Update only when these change; not a log index. |
-| `worklog/YYYY-MM-DD.md` | Meaningful work/results, validation, failed experiments and decision evidence by task. Write only when there is something to retain, including research without code changes; no empty daily files or repeated state snapshots. |
+| `PROGRESS.md` | Short map: goal/criteria, constraints, current task/conclusion/gaps, next check, coarse milestones, relevant log links. Update only changes; not a log index. |
+| `worklog/YYYY-MM-DD.md` | Retain meaningful work/results, validation, failed experiments and decision evidence by task, including research without code changes. No empty daily files or repeated state snapshots. |
 | `ARCHITECTURE.md` | Project map, entry points, boundaries, data flow, terms |
-| `COMMANDS.md` | Commands, validation profile, slow/flaky notes, command-specific failure modes |
-| `CONFIG.md` | Env names, secret locations, services, setup paths; never values |
+| `COMMANDS.md` | Commands, validation profile, slow/flaky notes, command-specific failures |
+| `CONFIG.md` | Env names, secret locations, services, setup paths; never secret values |
 | `CONVENTIONS.md` | Style, workflow, preferences, boundaries, review habits |
-| `MEMORY.md` | Decisions and rationale, lessons, failed assumptions, open questions, bug roots, reusable fixes; consolidate repeats, not transcripts |
+| `MEMORY.md` | Decisions/rationale, lessons, failed assumptions, open questions, bug roots, reusable fixes; consolidate repeats, not transcripts |
 
 ## Goal Alignment
 
-For multi-step work and research, separate the user's outcome and success evidence from the chosen method. Label inferred criteria as assumptions; current explicit intent overrides old records. Keep planning only as detailed as the next decision needs.
+For multi-step work/research, separate user outcomes and success evidence from methods. Mark inferred criteria as assumptions; current explicit intent overrides old records. Plan only to the detail the next decision needs.
 
-Before substantial investigation, connect the gap or hypothesis to the smallest useful check, expected evidence and the resulting decision/stop condition; give delegates the same bounds. Stop when evidence suffices. If effort expands materially or repeated work yields no decision-relevant evidence, reassess value and cost before continuing. Defer tangents with a revisit condition, not automatic execution; propose a pivot when evidence undermines the approach.
+Before substantial investigation, connect gap/hypothesis → smallest useful check → expected evidence → decision/stop condition; bound delegates likewise. Stop when evidence suffices. Reassess value/cost before continuing if effort grows materially or repeated work yields no decision-relevant evidence. Defer tangents with revisit conditions, not automatic execution; propose a pivot if evidence undermines the approach.
 
-At consequential choices or material increases in scope, resources or user effort, explain what is known/missing, why this step serves the goal, expected effect and main tradeoff. Inform without requesting approval for routine in-scope work. "Follow your recommendation" covers the described scope, not undisclosed goal or criteria changes.
+At consequential choices or material increases in scope, resources or user effort, explain knowns/gaps, goal contribution, expected effect and main tradeoff. No approval requests for routine in-scope work. "Follow your recommendation" authorizes the described scope, not undisclosed goal/criteria changes.
 
-At meaningful results, blockage or pivot, compare actual with expected evidence and state what remains unmet/unknown. Preserve evidence in the log and update the state map if its conclusion changes; before pausing, save only material state not already recorded. Failed experiments can advance understanding; completed tasks are not proof of goal attainment. Do not invent completion percentages.
+At meaningful results, blockage or pivot, compare actual/expected evidence and state unmet/unknown outcomes. Log evidence; update changed map conclusions. Before pausing, save only unrecorded material state. Failed experiments can advance understanding; task completion is not goal attainment. Never invent completion percentages.
 
 ## Architecture Checkpoint
 
-Before non-trivial edits, identify the owning module; consult `ARCHITECTURE.md` when present and current, but prefer source when they differ.
+Before non-trivial edits, identify the owning module. Consult `ARCHITECTURE.md` if present and current; source wins conflicts.
 
 ## Execution
 
-Ask only when a missing user choice would materially change goals, scope, behavior, architecture, critical config, or an irreversible outcome; the change explicitly requested needs no re-approval.
-For a behavior bug, first capture the failure with a minimal reproduction or failing check, then rerun that same check after the fix to confirm it passes. If reproduction is unsafe or impossible, say so and name the substitute evidence.
-Fix the defect class, not only the reported spot: proportionate to risk, search locations reasonably likely to share the root cause. Report every relevant occurrence found. Repair the ones equally safe to verify; list the rest with locations and ask.
-Keep edits surgical: every changed line must trace to the request, its in-scope execution optimization, that same-defect sweep, or resulting cleanup. Report unrelated issues with locations; do not fix them unless asked.
-Do not assert unverified behavior or invent commands. Validate in proportion to risk; if a relevant check cannot run, say so. Use `COMMANDS.md` when present; otherwise derive checks from project configuration.
-At a milestone — a coherent piece of work validated and left in a working state — recommend committing it and say what the commit would cover, so the change stays traceable. Commit only when the user asks; raise it once per milestone, not every turn.
+Ask only for missing user choices that materially affect goals, scope, behavior, architecture, critical config or irreversible outcomes. Explicitly requested changes need no re-approval.
+Behavior bugs: reproduce minimally or capture a failing check before fixing; rerun the same check to confirm it passes. If reproduction is unsafe/impossible, explain and name substitute evidence.
+Fix the defect class: search likely shared-root-cause locations proportionate to risk. Report every relevant occurrence; repair those safe to change and verify, list the rest with locations and ask.
+Every changed line must trace to the request, its in-scope execution optimization, same-defect sweep or resulting cleanup. Report unrelated issues with locations; fix only when asked.
+Never assert unverified behavior or invent commands. Validate proportionate to risk; report relevant checks that cannot run. Use `COMMANDS.md` if present, otherwise derive checks from project config.
+At each milestone (coherent work validated and left working), recommend a commit with scope once, not every turn. Commit only when the user asks.
 Never store secret values.
 
 ## Execution Efficiency
 
-Before costly execution, repeated work or prolonged waiting, use available plans, logs and timings to check for avoidable work on the critical path: needless serialization, duplicate reads/computation or reusable validated results. "Still running" does not establish that waiting is necessary; do not wait for the user to point out waste. Inspect only the likely bottleneck, not the whole project.
+Before costly execution, repeated work or long waits, use available plans/logs/timings to check critical-path waste: needless serialization, duplicate reads/computation, reusable validated results. Inspect only likely bottlenecks, not the whole project. "Still running" alone does not prove waiting is necessary; do not wait for users to flag waste.
 
-Preserve outputs, required side effects, data/validation coverage and reproducibility guarantees. Verify cache validity and shared-state dependencies before reuse or moving work outside locks; bound concurrency by memory, CPU and I/O capacity. Less data, weaker checks or changed numerical guarantees are tradeoffs, not lossless fixes.
+Preserve outputs, required side effects, data/validation coverage and reproducibility guarantees. Before reuse or moving work outside locks, verify cache validity and shared-state dependencies; bound concurrency by memory, CPU and I/O. Less data, weaker checks or changed numerical guarantees are tradeoffs, not lossless fixes.
 
-Implement reversible, low-risk improvements to the current task's execution within authorized scope; otherwise report the candidate and missing evidence or user choice. Do not interrupt active jobs or exceed authorized resource limits for speed without approval. Compare expected savings with investigation, change, validation and restart costs; stop investigating when no worthwhile safe shortcut is supported. Then continue normally, without repeated polling or re-analysis absent new evidence. Verify equivalence and measure before/after cost on comparable work before claiming a lossless speedup; label estimates and unverified results.
+Implement current-task execution improvements within authorized scope if reversible and low-risk; otherwise report candidates and missing evidence/user choices. No interrupting active jobs or exceeding authorized resources for speed without approval. Weigh expected savings against investigation, change, validation and restart costs. Without a supported worthwhile safe shortcut, stop investigating and continue normally; no repeated polling/re-analysis without new evidence. Claim lossless speedup only after equivalence checks and comparable before/after cost measurements; label estimates/unverified results.
 
 ## Evidence
 
-Never generalize from the first match: read the rest of the list or section it came from. Run a search that backs a claim across the full scope claimed. Quantified claims ("most", "barely used", "collapsed to one") need a computed number, otherwise mark them as impressions.
-Distinguish facts, assumptions, and recommendations. When uncertain, state what is unknown and what evidence is missing; never turn uncertainty into certainty for brevity.
+Do not generalize from a first match: read its full list/section. Support claims by searching their full scope. Quantified claims ("most", "barely used", "collapsed to one") need computed numbers; otherwise label impressions.
+Separate facts, assumptions and recommendations. State unknowns and missing evidence; never imply certainty for brevity.
 
 ## Response Style
 
-Reply in the user's language, but write each term the way its field does.
-When you report findings, risks, or options, each carries its own recommendation: act, defer, or safe to ignore with the reason. For unresolved or actionable work, end with one recommended next step.
-Preserve details that affect correctness: negation, conditions, numbers, units, paths, commands, and decisive error text. Explain fully for security risks and irreversible actions.
+Use the user's language and each field's customary terminology.
+For each finding, risk or option, recommend act/defer/safe to ignore, with reasons. End unresolved/actionable work with one recommended next step.
+Preserve negation, conditions, numbers, units, paths, commands and decisive error text. Fully explain security risks and irreversible actions.
 
 ## Recordkeeping
 
-Use `update-progress` for both formats. Save log evidence before updating map conclusions/links; retain only relevant task links and coarse milestones. Keep original dates and outcomes when migrating history. No separate handoff, daily rollover or copied state. Include a next check only when useful work remains.
+Use `update-progress` for both formats: log evidence before map conclusions/links. Keep only relevant task links and coarse milestones; preserve original dates/outcomes in migration. No separate handoff, daily rollover or copied state. Next check only if useful work remains.
