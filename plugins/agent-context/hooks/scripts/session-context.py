@@ -10,6 +10,7 @@ plugin's always-applied rule, so only the Codex host prepends the protocol here.
 
 import json
 import pathlib
+import re
 import sys
 
 # Hosts invoke this by absolute path, so make the sibling module importable
@@ -27,23 +28,18 @@ from hook_payload import (  # noqa: E402
 PLUGIN_ROOT = pathlib.Path(__file__).resolve().parents[2]
 PROTOCOL_PATH = PLUGIN_ROOT / "rules" / "agent-context-core.mdc"
 
-# Session-start capsule: enough to resume without opening the file. Carrying every
-# HANDOFF.md field would just reproduce the old whole-file injection, but carrying
-# too few is worse — the agent reads the file anyway and pays for both. Field names
-# match the file's own headings so there is no mapping to keep in sync.
-CAPSULE_ORDER = (
-    "Current Task",
-    "Status",
-    "Next Action",
-    "Blockers",
-    "User Instructions",
-    "Validation",
-    "Notes for Next Agent",
-)
-# Per field, because they are not equally compressible: a clipped `Next Action`
-# defeats the point of the capsule, while `Validation` only needs its headline.
 FIELD_MAX_CHARS = {
-    "Current Task": 200,
+    "Objective": 400,
+    "Constraints": 400,
+    "Current State": 800,
+    "Next Check": 400,
+}
+CAPSULE_ORDER = tuple(FIELD_MAX_CHARS)
+HISTORY_SECTIONS = {"Milestones", "Deferred", "Work Log"}
+CAPSULE_MAX_CHARS = 2200
+LEGACY_HANDOFF_CAPS = {
+    "Objective": 280,
+    "Current Task": 240,
     "Status": 260,
     "Next Action": 400,
     "Blockers": 200,
@@ -51,20 +47,15 @@ FIELD_MAX_CHARS = {
     "Validation": 160,
     "Notes for Next Agent": 220,
 }
-# Backstop only. The per-field caps plus heading overhead must stay under this by
-# construction; scripts/test-hooks.py asserts it rather than dropping fields at
-# runtime, because silently dropping a field is the failure this design replaced.
-CAPSULE_MAX_CHARS = 1850
-EMPTY_FIELD_VALUES = {
-    "none",
-    "none.",
-    "(none)",
-    "(not checked)",
-    "no active task.",
-    "no active task",
+LEGACY_PROGRESS_CAPS = {
+    "Objective": 280,
+    "Current Focus": 200,
+    "Goal Status": 260,
+    "In Progress": 240,
+    "Blockers": 200,
 }
-# Checked before English ". " so a Chinese sentence is not cut mid-clause.
-SENTENCE_ENDS = ("\n", "。", "！", "？", "；", ". ", "! ", "? ", "; ")
+LEGACY_HISTORY = {"Completed", "Older Milestones", "Backlog", "Context Freshness"}
+EMPTY_FIELD_VALUES = {"none", "none.", "(none)", "(not checked)"}
 
 
 def read_protocol():
@@ -80,12 +71,27 @@ def read_protocol():
     return text.strip()
 
 
-def split_sections(text):
-    """Map `## Heading` -> body for one markdown document."""
+def parse_sections(text):
+    """Return section bodies and the source line of an unclosed code fence."""
     sections = {}
     heading = None
     body = []
-    for line in text.splitlines():
+    fence = None
+    fence_line = None
+    for line_number, line in enumerate(text.splitlines(), 1):
+        marker = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
+        if fence:
+            if marker and marker[1][0] == fence[0] and len(marker[1]) >= len(fence) and not marker[2].strip():
+                fence = None
+            if heading:
+                body.append(line)
+            continue
+        if marker:
+            fence = marker[1]
+            fence_line = line_number
+            if heading:
+                body.append(line)
+            continue
         if line.startswith("## "):
             if heading:
                 sections[heading] = "\n".join(body).strip()
@@ -95,30 +101,20 @@ def split_sections(text):
             body.append(line)
     if heading:
         sections[heading] = "\n".join(body).strip()
-    return sections
+    return sections, fence_line if fence else None
 
 
-def last_sentence_end(head):
-    """Index of the last sentence or line boundary in `head`, or -1."""
-    best = -1
-    for mark in SENTENCE_ENDS:
-        found = head.rfind(mark)
-        if found >= 0:
-            best = max(best, found + len(mark) - 1)
-    return best
+def split_sections(text):
+    """Map `## Heading` -> body without promoting fenced text to headings."""
+    return parse_sections(text)[0]
 
 
-def clip_field(name, value):
-    limit = FIELD_MAX_CHARS.get(name, 240)
+def clip_field(name, value, limits=None):
+    """An arbitrary prefix can lose a negation or condition; omit rather than alter."""
+    limit = (FIELD_MAX_CHARS if limits is None else limits).get(name, 240)
     if len(value) <= limit:
         return value, False
-    head = value[:limit]
-    # Cut on a sentence or line boundary when one is close enough, so a clipped
-    # field still reads as a statement rather than a fragment.
-    boundary = last_sentence_end(head)
-    if boundary > limit // 2:
-        head = head[: boundary + 1]
-    return head.rstrip() + " …", True
+    return "[Content omitted: section exceeds resume budget.]", True
 
 
 def render_fields(fields):
@@ -129,70 +125,73 @@ def is_placeholder(value):
     return not value or value.strip().lower() in EMPTY_FIELD_VALUES
 
 
-def build_capsule(text):
-    """Return (capsule, caveat): the resume fields, plus a pointer only for the
-    sections the capsule does not carry at all.
-
-    Truncation used to slice the tail off the whole file, which silently dropped
-    whatever sat last. Clipping each field instead keeps every field visible, and
-    a clipped field gets `…` and nothing more: asking the agent to open the file
-    whenever anything was shortened pulls the whole snapshot back into context and
-    cancels the saving. A section the capsule never carries is different — it is
-    invisible from here, so it is the one thing worth naming.
-    """
-    sections = split_sections(text)
-    fields = [
-        (name, clip_field(name, sections[name].strip())[0])
-        for name in CAPSULE_ORDER
-        if not is_placeholder(sections.get(name, ""))
-    ]
-
-    # A handoff without the expected headings cannot be selected from, so fall
-    # back to a head slice — the only case where reading the file is warranted.
-    if not fields:
-        head = text[:CAPSULE_MAX_CHARS].rstrip()
-        caveat = (
-            ""
-            if len(text) <= CAPSULE_MAX_CHARS
-            else "\n\nTruncated; read .agent-context/HANDOFF.md for the rest."
-        )
-        return head, caveat
-
-    uncarried = [
-        name
-        for name, value in sections.items()
-        if name not in CAPSULE_ORDER and not is_placeholder(value)
-    ]
-    caveat = (
-        f"\n\nNot carried here: {', '.join(uncarried)}. "
-        "Read .agent-context/HANDOFF.md only if you need them."
-        if uncarried
-        else ""
+def build_capsule(text, limits=None, history=None):
+    """Select current sections verbatim; report omitted information without guessing."""
+    limits = FIELD_MAX_CHARS if limits is None else limits
+    history = HISTORY_SECTIONS if history is None else history
+    sections, unclosed_fence = parse_sections(text)
+    fence_note = (
+        f"\n\nUnclosed code fence at source line {unclosed_fence}; later headings may be inside the code block."
+        if unclosed_fence else ""
     )
-    return render_fields(fields), caveat
+    if not sections:
+        if len(text) <= min(CAPSULE_MAX_CHARS, sum(limits.values())):
+            return text, fence_note
+        return "[Unstructured record omitted: exceeds resume budget.]", fence_note
+
+    fields = []
+    omitted = []
+    for name in limits:
+        value = sections.get(name, "").strip()
+        if is_placeholder(value):
+            continue
+        excerpt, shortened = clip_field(name, value, limits)
+        fields.append((name, excerpt))
+        if shortened:
+            omitted.append(name)
+    notes = []
+    if omitted:
+        notes.append("Omitted source sections: " + ", ".join(omitted) + ".")
+    if any(name not in limits and name not in history and not is_placeholder(value)
+           for name, value in sections.items()):
+        notes.append("Additional source sections are not carried here.")
+    if not fields:
+        notes.append("No current-state content in recognized sections.")
+    return render_fields(fields), ("\n\n" + " ".join(notes) if notes else "") + fence_note
 
 
-def build_handoff_section(project_dir):
-    """State only. The protocol owns what to do about it; restating it here would
-    put a second, drifting copy of `Startup` into every session."""
+def read_record(path):
+    try:
+        return path.read_text(encoding="utf-8", errors="replace").rstrip()
+    except OSError:
+        return ""
+
+
+def record_excerpt(name, text, limits=None, history=None):
+    capsule, caveat = build_capsule(text, limits, history)
+    return f"Source: .agent-context/{name}\n\n{capsule}{caveat}"
+
+
+def build_progress_section(project_dir):
+    """Prefer a unified record; legacy sources stay separate until reconciled."""
     agent_dir = pathlib.Path(project_dir) / ".agent-context"
     if not agent_dir.is_dir():
         return f"[Agent Context] No .agent-context/ directory in {project_dir}."
 
-    handoff_path = agent_dir / "HANDOFF.md"
-    try:
-        text = handoff_path.read_text(encoding="utf-8", errors="replace").strip()
-    except OSError:
-        text = ""
+    progress = read_record(agent_dir / "PROGRESS.md")
+    prefix = f"[Agent Context] Project memory at {agent_dir}.\n\n"
+    if "Current State" in split_sections(progress):
+        return prefix + record_excerpt("PROGRESS.md", progress)
 
-    if not text:
-        return f"[Agent Context] .agent-context/ at {agent_dir}; HANDOFF.md is missing or empty."
-
-    capsule, caveat = build_capsule(text)
-    return (
-        f"[Agent Context] .agent-context/ at {agent_dir}. "
-        f"Session-start capsule from HANDOFF.md:\n\n{capsule}{caveat}"
-    )
+    legacy = read_record(agent_dir / "HANDOFF.md")
+    sources = []
+    if progress:
+        sources.append(record_excerpt("PROGRESS.md", progress, LEGACY_PROGRESS_CAPS, LEGACY_HISTORY))
+    if legacy:
+        sources.append(record_excerpt("HANDOFF.md", legacy, LEGACY_HANDOFF_CAPS, set()))
+    if not sources:
+        return prefix + "PROGRESS.md is missing, empty or unreadable; no legacy work state is available."
+    return prefix + "Legacy records (not yet consolidated; sources may disagree):\n\n" + "\n\n---\n\n".join(sources)
 
 
 def build_message(host, project_dir):
@@ -203,7 +202,7 @@ def build_message(host, project_dir):
             sections.append(
                 "[Agent Context] Operating protocol for this session:\n\n" + protocol
             )
-    sections.append(build_handoff_section(project_dir))
+    sections.append(build_progress_section(project_dir))
     return "\n\n---\n\n".join(sections)
 
 

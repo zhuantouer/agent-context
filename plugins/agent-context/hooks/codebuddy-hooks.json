@@ -8,7 +8,7 @@
           {
             "type": "command",
             "command": "python3 \"${CODEBUDDY_PLUGIN_ROOT}/hooks/scripts/session-context.py\" codebuddy",
-            "statusMessage": "Loading agent-context handoff"
+            "statusMessage": "Loading agent-context work record"
           }
         ]
       }
@@ -18,8 +18,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CODEBUDDY_PLUGIN_ROOT}/hooks/scripts/handoff-signal.py\" codebuddy",
-            "statusMessage": "Checking handoff freshness"
+            "command": "python3 \"${CODEBUDDY_PLUGIN_ROOT}/hooks/scripts/work-signal.py\" codebuddy",
+            "statusMessage": "Checking modified code size"
           }
         ]
       }

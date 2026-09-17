@@ -5,15 +5,15 @@
     "email": "thanezh@example.com"
   },
   "metadata": {
-    "description": "Lightweight agentic context, task handoff, and validation habits plugin for CodeBuddy",
-    "version": "0.1.2"
+    "description": "Goal-directed project memory and work records for CodeBuddy",
+    "version": "0.2.0"
   },
   "plugins": [
     {
       "name": "agent-context",
       "source": "./plugins/agent-context",
-      "description": "Auto-maintained project context, task handoff, validation habits, and lessons learned",
-      "version": "0.1.2",
+      "description": "Auto-maintained objectives, conclusions, work history and project knowledge",
+      "version": "0.2.0",
       "category": "Productivity"
     }
   ]

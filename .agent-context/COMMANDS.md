@@ -5,33 +5,36 @@
 
 ## Development
 - Validate plugin structure (every host): `node scripts/validate-template.mjs`
-- Hook behaviour tests (stdlib only, ~1s): `python3 scripts/test-hooks.py`
+- Hook and packaging tests (Python unittest; packaging cases also require Node/Bash): `python3 scripts/test-hooks.py`
 
 ## Validation Profile
 - Plugin rules, skills, hooks, manifests, marketplaces, or docs: `node scripts/validate-template.mjs`
-- Hook script changes: the validator, plus `python3 scripts/test-hooks.py`, plus `bash -n` on both `.sh` entry points. The smoke tests below stay useful for eyeballing real output, but the test suite is what must pass.
-- `handoff` skill template changes: `python3 scripts/test-hooks.py` — it asserts the template still defines every field the session-start capsule injects.
+- Hook script changes: the validator, plus `python3 scripts/test-hooks.py`, plus `bash -n` on the `.sh` entries. The smoke tests below stay useful for eyeballing real output, but the test suite is what must pass.
+- Release metadata/installer changes: the same suite checks version mismatches, independent marketplace metadata versions and generated-file exclusion using temporary repositories/HOME; it never installs into the user's real HOME. Also run `bash -n scripts/install-local.sh`.
+- `update-progress` template changes: the suite checks map/log partition, task links, no resume writes/log reads, legacy compatibility, whole-section omission, fence diagnostics and Codex limits. After editing a real map, inspect its rendered excerpt for missing conclusions/links rather than assuming a short line count fits.
+- History migration: compare every source entry and deferred detail with destination text before removing it; verify local linked files and headings, including ambiguous dates/ranges. Do not treat counts alone as content preservation.
+- Goal-alignment and execution-efficiency behavior: start with `plugins/agent-context/README.md#minimal-decision-replay`; tools-disabled output is only a preflight. Full behavior acceptance still requires tool-enabled isolated tasks through actual plugin loading after authorized installation/reload. Compare spontaneous discovery, safe action, preserved results and total cost; automated checks do not prove judgment or savings.
 - Docs-only changes: manual review; run structure validation if plugin metadata, skills, hooks, or rules changed.
 
 ## Hook Smoke Tests
 Run from the repository root with `S=plugins/agent-context/hooks/scripts` and `R=$PWD`.
 
-- Cursor session start (expect `additional_context` with the resume capsule, no protocol; ~1350 chars on this repo's handoff, hard ceiling 1850). Note the Codex line below invokes the Python directly — `session-start.sh` hard-codes the `cursor` argument and silently ignores any argument you append:
+- Cursor session start (expect `additional_context` from current PROGRESS sections, no protocol; history stays on demand and over-budget sections are labelled omitted rather than truncated. Unified template fields fit a 2200-character body backstop, excluding wrappers/caveats; legacy sources have separate budgets). Note the Codex line below invokes the Python directly — `session-start.sh` hard-codes the `cursor` argument and silently ignores any argument you append:
   `echo "{\"workspace_root\":\"$R\"}" | bash $S/session-start.sh`
-- Codex session start (expect `hookSpecificOutput.additionalContext` containing the protocol and the capsule, under the 10000-char limit):
+- Codex session start (expect `hookSpecificOutput.additionalContext` containing the protocol and the capsule, under the configured 10000 approximate-token threshold, not a character cap; current upstream estimates `ceil(UTF-8 bytes / 4)`, checked with ASCII and multibyte fixtures):
   `echo "{\"cwd\":\"$R\"}" | python3 $S/session-context.py codex`
 - CodeBuddy session start (expect `hookSpecificOutput.additionalContext` with the resume capsule and **no** protocol — CodeBuddy loads `rules/` itself):
   `echo "{\"cwd\":\"$R\"}" | python3 $S/session-context.py codebuddy`
-- Cursor stop, completed turn (expect `followup_message` only when a file **outside** `.agent-context/` is dirty and the handoff is older than it; a turn that touched only `.agent-context/` must stay silent):
-  `echo "{\"status\":\"completed\",\"workspace_root\":\"$R\"}" | bash $S/stop-handoff-reminder.sh`
-- Cursor stop, aborted turn (expect `{}`):
-  `echo "{\"status\":\"aborted\",\"workspace_root\":\"$R\"}" | bash $S/stop-handoff-reminder.sh`
-- Codex stop, completed turn (expect `systemMessage`, and specifically **not** `decision: block`, which would force an extra turn):
-  `echo "{\"last_assistant_message\":\"done\",\"cwd\":\"$R\"}" | python3 $S/handoff-signal.py codex`
-- Codex stop, loop guard (expect `{}`):
-  `echo "{\"last_assistant_message\":\"done\",\"stop_hook_active\":true,\"cwd\":\"$R\"}" | python3 $S/handoff-signal.py codex`
-- CodeBuddy stop, completed turn (expect `systemMessage`, and specifically **not** `decision: block` or Cursor's `followup_message`):
-  `echo "{\"cwd\":\"$R\"}" | python3 $S/handoff-signal.py codebuddy`
+- Cursor Stop (expect `{}` unless a modified code file reaches 600 lines; then an advisory `followup_message`, never a request to update records):
+  `echo "{\"status\":\"completed\",\"workspace_root\":\"$R\"}" | bash $S/stop-work-review.sh`
+- Cursor aborted turn (expect `{}` even with a large modified file):
+  `echo "{\"status\":\"aborted\",\"workspace_root\":\"$R\"}" | bash $S/stop-work-review.sh`
+- Codex completed turn (same large-file condition; `systemMessage`, never `decision: block`):
+  `echo "{\"last_assistant_message\":\"done\",\"cwd\":\"$R\"}" | python3 $S/work-signal.py codex`
+- Codex loop guard (expect `{}`):
+  `echo "{\"last_assistant_message\":\"done\",\"stop_hook_active\":true,\"cwd\":\"$R\"}" | python3 $S/work-signal.py codex`
+- CodeBuddy completed turn (same large-file condition; `systemMessage`, never `decision: block`):
+  `echo "{\"cwd\":\"$R\"}" | python3 $S/work-signal.py codebuddy`
 
 ## Verifying a Live Codex Install
 The smoke tests only prove the scripts work, not that Codex runs them. To check the real install:
@@ -40,8 +43,8 @@ The smoke tests only prove the scripts work, not that Codex runs them. To check 
 - The bytes Codex actually runs live in `~/.codex/plugins/cache/personal/agent-context/<version>/`, not in `~/.codex/plugins/agent-context/`. Smoke-test that copy when debugging a live install.
 - Plugin load errors: `sqlite3 ~/.codex/logs_2.sqlite "SELECT datetime(ts,'unixepoch','localtime'), level, substr(feedback_log_body,1,150) FROM logs WHERE target LIKE '%plugins%' AND level='WARN' ORDER BY id DESC LIMIT 10;"` — a `configured non-curated plugin no longer exists in discovered marketplaces` warning means `~/.codex/config.toml` enables a plugin name the marketplace does not declare.
 - Enabled names must match: compare `rg 'agent-context' ~/.codex/config.toml` against the `name` in `~/.agents/plugins/marketplace.json`.
-- In the app: the plugin appears under Plugins, and a new session flashes the `statusMessage` from `hooks/codex-hooks.json` ("Loading agent-context protocol and handoff").
-- Behavioral: ask a fresh session which file owns validation commands and when `HANDOFF.md` must be rewritten. With the protocol injected it answers `COMMANDS.md` and "before pause/block/handoff, or when task state materially changes" without reading any file.
+- In the app: the plugin appears under Plugins, and a new session flashes the `statusMessage` from `hooks/codex-hooks.json` ("Loading agent-context protocol and work record").
+- Behavioral: ask where current conclusions and detailed history belong. Expect `PROGRESS.md` for goal/now/milestones, `worklog/YYYY-MM-DD.md` for evidence, no daily handoff or write on unchanged status. Run the linked replay, including date gaps and interleaved tasks.
 
 ## Build & Deploy
 - Build: No build step detected.

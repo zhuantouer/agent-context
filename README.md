@@ -1,70 +1,66 @@
 # agent-context
 
-**Project memory for AI coding agents, in seven markdown files.** No index, no database, no daemon, no MCP server — the agent reads and writes plain files in `.agent-context/`, and one source installs into [Cursor](https://cursor.com/cn/docs/plugins), Codex, and [CodeBuddy](https://www.codebuddy.cn/docs/cli/plugins).
+**Keep the goal, the conclusions, and the work that led there.** `agent-context` gives AI-assisted projects a durable work record in plain Markdown, shared by [Cursor](https://cursor.com/cn/docs/plugins), Codex, and [CodeBuddy](https://www.codebuddy.cn/docs/cli/plugins).
 
-Most tools in this space solve session amnesia with infrastructure: knowledge graphs, embedded SQLite, vector search, MCP servers exposing dozens of tools. This one is a rule file, four skills, and two lifecycle hooks written against the Python standard library. Nothing to install, nothing to run, nothing to keep in sync. If your agent can read a file, it works.
+One protocol, three skills, and lightweight Python-standard-library hooks. No index, database, daemon or MCP server. The agent maintains `.agent-context/PROGRESS.md`; new sessions read its current sections directly. There is no separate handoff to prepare or keep in sync.
 
 ## What it solves
 
 | Pain point | How agent-context fixes it |
 |------------|---------------------------|
-| API keys / config forgotten mid-session | `.agent-context/CONFIG.md` persists key locations, auto-loaded each session |
-| Agent re-reads the entire codebase every time | `.agent-context/ARCHITECTURE.md` gives instant project map |
+| API keys / config forgotten mid-session | `.agent-context/CONFIG.md` persists key locations, loaded on demand; never secret values |
+| Agent re-reads the entire codebase every time | `.agent-context/ARCHITECTURE.md` gives a project map |
 | Commands re-discovered through trial & error | `.agent-context/COMMANDS.md` caches commands plus the validation profile |
-| No idea what's done vs. what's left | `.agent-context/PROGRESS.md` tracks everything, auto-updated |
-| New chats lose the execution thread | `.agent-context/HANDOFF.md` captures current task, next action, validation, and blockers |
+| Research produces branches instead of progress | `.agent-context/PROGRESS.md` preserves the objective, success criteria, subgoal expectations and remaining gaps |
+| New chats remember the task but forget its purpose | SessionStart selects the current sections of `PROGRESS.md`, not a second snapshot |
 | Agent misses local project habits | `.agent-context/CONVENTIONS.md` stores style, workflow, boundaries, and user preferences |
 | Agent hallucinates or free-wheels | Built-in confirmation guardrails |
 | Hard-won lessons disappear after the chat | `.agent-context/MEMORY.md` captures project decisions, user corrections, failures, and mistakes to avoid |
 
 ## How it works
 
-The plugin installs **rules**, **skills**, and lightweight hooks that make your AI agent self-manage a `.agent-context/` directory in your project:
+The agent keeps a short state map, dated evidence logs and only useful supporting knowledge:
 
 ```
 .agent-context/
-├── HANDOFF.md        ← active task state, next action, validation, blockers
-├── PROGRESS.md       ← project progress tracker (completed / in-progress / backlog)
-├── ARCHITECTURE.md   ← project structure, tech stack, entry points
-├── COMMANDS.md       ← commands + validation profile
-├── CONFIG.md         ← API key locations, env setup (paths only, never values)
-├── CONVENTIONS.md    ← project habits, user preferences, boundaries
-└── MEMORY.md         ← decisions, lessons, user corrections, and failures
+├── PROGRESS.md       ← goal, current state, next check, coarse milestones and relevant links
+├── worklog/
+│   └── YYYY-MM-DD.md ← meaningful work, experiments and decision evidence by task
+├── ARCHITECTURE.md   ← project map and boundaries, when useful
+├── COMMANDS.md       ← reusable commands and validation profile
+├── CONFIG.md         ← env names and secret locations, never values
+├── CONVENTIONS.md    ← durable preferences and boundaries
+└── MEMORY.md         ← reusable lessons and decision rationale
 ```
 
-Recommended git model:
+`PROGRESS.md` answers “where are we now?”; daily logs explain “what happened and why?”. SessionStart carries `Objective`, optional `Constraints`, `Current State` and optional `Next Check`, including a few task-relevant links. `Milestones` summarizes coarse outcomes, not every day or task. Neither logs nor milestones are automatically loaded; there is no full log index in PROGRESS. The [update-progress templates](plugins/agent-context/skills/update-progress/SKILL.md) define both formats.
 
-- Commit shared knowledge files: `ARCHITECTURE.md`, `COMMANDS.md`, `CONFIG.md` (paths only, never values), `CONVENTIONS.md`, `MEMORY.md`, and usually `PROGRESS.md`.
-- Treat `HANDOFF.md` as local working state by default. It changes often and can create noisy diffs or team conflicts.
-- For teams, consider ignoring only the handoff file:
+For example, a record can say: the goal is shorter query latency; the current conclusion is that A meets the latency limit but recall is unmeasured; the next check measures recall and determines whether to select A; the dated log explains which experiment established the latency result. This is useful working knowledge, not an extra handoff ritual.
 
-```gitignore
-.agent-context/HANDOFF.md
-```
+**You do not maintain these files manually.** Record meaningful results in the day's log first; update PROGRESS only when its state, milestone or relevant link changes. A new date alone triggers nothing. Current task links may point to Friday on Monday, or to an older task even when another task has a newer log. If the map suffices, continue without opening logs; otherwise read the linked task section. Never copy yesterday into today or create an empty daily file. Simple questions and unchanged status require no writes.
 
-If you want handoffs shared across a branch or PR, commit them intentionally.
+Commit useful work records and shared knowledge intentionally, excluding sensitive information. Do not ignore `PROGRESS.md` merely because the old handoff was local state. At a validated milestone the agent recommends a commit and names its scope; it commits only when asked.
 
-**You don't maintain these files.** The agent does. The core rule (`agent-context-core.mdc`, `alwaysApply: true`) instructs the agent to:
+## Staying on the main line
 
-1. **Bootstrap** `.agent-context/` on first run (or when you run `/bootstrap-context`)
-2. **Resume from handoff** at the start of every new session, reinforced by the `sessionStart` hook
-3. **Load context on demand** instead of dumping every reference file into the chat
-4. **Auto-update** context files as the project evolves
-5. **Track progress** in `PROGRESS.md` and active task state in `HANDOFF.md`
-6. **Follow project conventions** captured in `CONVENTIONS.md`
-7. **Use validation profiles** from `COMMANDS.md` before claiming work is done
-8. **Confirm before** risky actions (core logic changes, deletions, new deps)
-9. **Capture experience and failure lessons** so future agents avoid repeating mistakes
-10. **Recommend a commit** once a piece of work is validated, leaving the decision to you
+For multi-step work and open-ended research, connect **outcome → gap/hypothesis → useful check → expected evidence → resulting decision**. Expand plans only enough to choose the next step, not into a mandatory goal tree. Reassess before substantial extra time, resources or user effort, and when repeated work yields no decision-relevant evidence.
+
+Before a consequential recommendation, the agent explains why it advances the goal, what it is expected to change, its main cost/risk and what it defers. For example: “We can choose A or B once latency is measured. I recommend one representative benchmark; a broader method survey is deferred because it cannot settle that gap.” Agreement approves that described scope, not an unlimited exploration mandate.
+
+This is not an approval gate for every action. Routine steps remain autonomous; useful exploration gets a decision question and a stop/return condition. New evidence can justify revising the plan. Stage completion compares expected and actual outcomes, rather than counting tasks as goal attainment. No mandatory goal tree, extra planning file, every-turn report or forced continuation hook is added.
+
+Execution efficiency is part of that goal: before costly work or a long wait, look for unnecessary serialization, repeated computation and valid reusable results. Implement safe in-scope improvements without waiting for the user to notice, while preserving outputs, coverage and resource limits. Avoid replacing waiting with an open-ended optimization project.
+
+See the [behavior acceptance scenarios](plugins/agent-context/README.md#behavior-acceptance), including the [lossless-efficiency replay](plugins/agent-context/README.md#lossless-efficiency-replay), for both progress and restraint checks. Preserving goal text is automatically tested; proactive judgment and actual savings still need live-session validation.
 
 ## How to know it's working
 
 You should notice practical changes in agent behavior:
 
-- New chats resume from `.agent-context/HANDOFF.md` without you re-explaining the task.
-- Agents re-read less of the codebase because `.agent-context/ARCHITECTURE.md` points them to the right files.
-- Validation happens more consistently because `.agent-context/COMMANDS.md` records the project's checks.
-- Handoffs name a concrete next action plus the check that proves it worked.
+- New chats recover the goal and current conclusion from the work record.
+- Agents use `.agent-context/ARCHITECTURE.md` to locate relevant modules instead of scanning everything.
+- Validation results explain what was checked and what remains unknown.
+- Work history explains why a conclusion changed; next checks explain what decision they will inform.
 - Lessons from mistakes show up in `.agent-context/MEMORY.md` instead of disappearing with the chat.
 - Diffs stay focused because the core rule tells agents to keep edits tied to the user's request.
 
@@ -82,7 +78,7 @@ cd ~/workspace/agent-context
 
 **Cursor:** copies into `~/.cursor/plugins/local/`. Cursor **rejects symlinks** to paths outside that directory (`0 plugins loaded` in Cursor Plugins log). Re-run after editing, then **Developer: Reload Window**. Verify under **Settings → Plugins → Installed**.
 
-**CodeBuddy:** copies into `~/.codebuddy/plugins/` and, if the `codebuddy` CLI is on `PATH`, adds this repo as a marketplace and installs `agent-context@agent-context-marketplace`. Otherwise add the repo from **Settings → Plugins**, or test with `codebuddy --plugin-dir ./plugins/agent-context`. Then `/reload-plugins`. Protocol comes from the plugin's `rules/`; hooks only inject the handoff capsule.
+**CodeBuddy:** copies into `~/.codebuddy/plugins/` and, if the `codebuddy` CLI is on `PATH`, adds this repo as a marketplace and installs `agent-context@agent-context-marketplace`. Otherwise add the repo from **Settings → Plugins**, or test with `codebuddy --plugin-dir ./plugins/agent-context`. Then `/reload-plugins`. Protocol comes from the plugin's `rules/`; SessionStart reads the work record.
 
 **Codex:** copies into `~/.codex/plugins/` and runs `codex plugin add agent-context@personal`. Restart Codex and trust plugin hooks; without trust there is no protocol injection.
 
@@ -108,10 +104,9 @@ Skills follow the [Agent Skills](https://cursor.com/cn/docs/skills) format (`ski
 
 | Skill | Auto trigger | Manual |
 |-------|--------------|--------|
-| `bootstrap-context` | First run, or when `.agent-context/` is missing | `/bootstrap-context` |
-| `sync-context` | After significant project changes | `/sync-context` |
-| `update-progress` | After completing a task; status queries | `/update-progress` |
-| `handoff` | Before new chats, compaction, pauses, blockers, or after substantive edits/validation | `/handoff` |
+| `bootstrap-context` | Missing context before substantive work; explicit initialize/refresh | `/bootstrap-context` |
+| `sync-context` | Material project or research-state changes | `/sync-context` |
+| `update-progress` | Goal/plan changes, stage outcomes; status queries without rewriting unchanged state | `/update-progress` |
 
 ## Rules
 
@@ -123,15 +118,22 @@ See [Cursor Rules docs](https://cursor.com/cn/docs/rules) for how `alwaysApply` 
 
 ## Hooks
 
-- `sessionStart` emits JSON with `additional_context` (per [Cursor hooks](https://cursor.com/docs/hooks)). If `.agent-context/HANDOFF.md` exists, it injects a short handoff summary so the new chat can resume immediately. It resolves the project path via `CURSOR_PROJECT_DIR`, not the plugin install directory.
-- `stop` runs a conservative handoff reminder after completed agent turns. It only asks the agent to refresh `.agent-context/HANDOFF.md` when the git worktree has changes that appear newer than the handoff. It skips aborted/error turns, fails open, and uses `loop_limit: 1` to avoid reminder loops.
+- `sessionStart` selects the current sections of `PROGRESS.md`, not its history. Normal excerpts fit a 2200-character body budget. Over-budget sections are explicitly omitted rather than sliced through a condition or negation; the agent reads the source section before a dependent decision. Cursor uses `additional_context`; Codex and CodeBuddy use `hookSpecificOutput.additionalContext`. Only Codex also injects the protocol.
+- `stop` retains the advisory check for modified code files of at least 600 lines. It does not infer progress from timestamps or request record updates. Aborted/error and guarded continuation turns stay quiet; failures do not block work.
+
+## Upgrading older projects
+
+Update the plugin and reload the host first. Old progress files and `HANDOFF.md` remain readable; `Current State` still identifies authoritative current state, so dated logs do not require a new recovery format. On a substantive update or explicit migration, `update-progress` moves embedded history to dated logs, verifies preserved entries and links, then replaces detail with coarse milestones. Keep original dates; ambiguous dates/ranges remain labelled in an import section, not falsely attributed to today. Existing daily entries must not be overwritten or duplicated.
+
+No hook or installer edits project records. Legacy files can remain untouched; delete one only after its useful content is preserved and cleanup is authorized. The handoff skill is retired. Older plugin versions do not recover the unified record, so downgrading is not a reason to maintain duplicate state.
 
 ## Development
 
-Validate plugin structure:
+Validate plugin structure and hook behavior:
 
 ```bash
 node scripts/validate-template.mjs
+python3 scripts/test-hooks.py
 ```
 
 Bootstrap avoids Unix-only scan commands in generated guidance. Prefer Cursor file tools, `rg`, or `git ls-files` so the workflow works across macOS, Linux, and Windows-style environments.
@@ -143,7 +145,7 @@ Cursor, Codex, and CodeBuddy work today. Claude Code, OpenCode, and Pi do not ye
 | Host | Rough approach |
 |------|----------------|
 | **Claude Code** | Closest to CodeBuddy's hook I/O. Add `.claude-plugin/plugin.json`, point hooks at the existing Python scripts. Smoke-test that plugin SessionStart actually surfaces `additionalContext` (some Claude builds have dropped it from plugin hooks). |
-| **OpenCode** | Thin JS/TS plugin in `opencode.json`. Inject protocol + handoff via `experimental.chat.messages.transform`, register `skills/` via the `config` hook (same pattern as [Superpowers for OpenCode](https://github.com/obra/superpowers/blob/main/docs/README.opencode.md)). Spawn the existing Python hooks instead of rewriting them. |
+| **OpenCode** | Thin JS/TS plugin in `opencode.json`. Inject protocol + work-record excerpt via `experimental.chat.messages.transform`, register `skills/` via the `config` hook (same pattern as [Superpowers for OpenCode](https://github.com/obra/superpowers/blob/main/docs/README.opencode.md)). Spawn the existing Python hooks instead of rewriting them. |
 | **Pi** | A pi package (`pi.skills` + `pi.extensions`). Inject on `before_agent_start`, advisory nudge on `agent_settled`. Again: call the Python hooks; don't fork the protocol. |
 
 **Invariants for any host PR:** one canonical `rules/agent-context-core.mdc` (every host reads it; none restate it); skills stay host-neutral; stop signals stay advisory (no forced continuation).
@@ -153,13 +155,13 @@ Cursor, Codex, and CodeBuddy work today. Claude Code, OpenCode, and Pi do not ye
 Inspired by AgenticMetaEngineering (Tencent-internal, by r***hou) and [Superpowers](https://github.com/obra/superpowers), but **radically simplified**:
 
 - **No 8-stage workflow.** No gate audits. No mandatory worktrees.
-- **No 20+ plugins.** One plugin, one rule file, four skills.
+- **No 20+ plugins.** One plugin, one rule file, three skills.
 - **No per-requirement directory scaffolding.** Just `.agent-context/`.
 - **The agent maintains the context, not you.** You just code.
 
 The key insight from AME: **LLM context window is "working memory"; files are the "hard drive."** Move everything that needs to persist out of the conversation and into files. But unlike AME, we don't wrap that in a heavy process framework — just a lightweight rule that tells the agent to do it automatically.
 
-The same restraint applies against the agent-memory tools this now shares a category with. They index your repo into a graph, run a local database, or expose a memory API the agent has to learn how to query — and in exchange you maintain an index, a service, and a schema. `.agent-context/` is seven files you can read, edit, review in a PR, and delete. The bet is that a small hand-written map beats a large generated one, because the agent already knows how to read markdown and you already know how to fix it when it's wrong.
+Optimize for useful work, not paperwork: keep one short state map, load dated evidence and supporting knowledge only when needed, and evaluate both goal progress and unnecessary reads, writes and approval requests. No prompt or hook can prove that a research direction is valuable; that requires observable decisions and outcomes.
 
 ## License
 

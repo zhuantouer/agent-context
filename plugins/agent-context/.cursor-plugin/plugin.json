@@ -1,13 +1,13 @@
 {
   "name": "agent-context",
   "displayName": "Agent Context",
-  "version": "0.1.2",
-  "description": "Project memory as seven plain markdown files: task handoff, project map, commands, and lessons. No index, no database, no MCP server.",
+  "version": "0.2.0",
+  "description": "Goal-directed project memory: a short goal/state map and dated work logs loaded on demand. No index, database or MCP server.",
   "author": {
     "name": "thanezh"
   },
   "license": "MIT",
-  "keywords": ["cursor", "codex", "codebuddy", "plugin", "context", "memory", "project-memory", "handoff", "session-handoff", "progress", "validation", "lessons", "agentic", "markdown", "zero-dependency"],
+  "keywords": ["cursor", "codex", "codebuddy", "plugin", "context", "memory", "project-memory", "goals", "work-log", "progress", "validation", "lessons", "agentic", "markdown", "zero-dependency"],
   "logo": "assets/logo.svg",
   "rules": "rules/",
   "skills": "skills/",

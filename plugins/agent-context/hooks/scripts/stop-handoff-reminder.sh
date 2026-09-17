@@ -1,8 +1,6 @@
 #!/bin/bash
-# Cursor stop entry point. The implementation is shared with the Codex host in
-# handoff-signal.py; only the turn gate and output shape differ.
-
+# Compatibility entry for cached Cursor Stop commands.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-exec python3 "${SCRIPT_DIR}/handoff-signal.py" cursor
+exec bash "${SCRIPT_DIR}/stop-work-review.sh" "$@"

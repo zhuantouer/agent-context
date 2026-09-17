@@ -8,7 +8,7 @@
     ],
     "stop": [
       {
-        "command": "scripts/stop-handoff-reminder.sh",
+        "command": "scripts/stop-work-review.sh",
         "loop_limit": 1
       }
     ]

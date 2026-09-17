@@ -64,6 +64,29 @@ async function readJSON(filePath) {
   }
 }
 
+const pluginVersions = new Map();
+
+async function validateReleaseVersion(pluginDir, plugin, host) {
+  const manifestPath = path.join(pluginDir, `.${host}-plugin`, "plugin.json");
+  const manifest = await readJSON(manifestPath);
+  if (!manifest) return;
+  const source = path.relative(repoRoot, manifestPath);
+  const version = manifest.version;
+  if (typeof version !== "string" || !version.trim()) {
+    addError(`${source}: plugin version must be a non-empty string`);
+    return;
+  }
+  const expected = pluginVersions.get(plugin.name);
+  if (expected && version !== expected.version) {
+    addError(`Plugin '${plugin.name}' version mismatch: ${source} has ${version}; ${expected.source} has ${expected.version}`);
+  } else if (!expected) {
+    pluginVersions.set(plugin.name, { version, source });
+  }
+  if (plugin.version !== undefined && plugin.version !== version) {
+    addError(`Plugin '${plugin.name}' version mismatch: ${host} marketplace entry has ${JSON.stringify(plugin.version)}; ${source} has ${version}`);
+  }
+}
+
 async function validateMarketplace() {
   const marketplacePath = path.join(repoRoot, ".cursor-plugin", "marketplace.json");
   if (!(await pathExists(marketplacePath))) {
@@ -103,6 +126,7 @@ async function validateMarketplace() {
     }
 
     await validatePlugin(pluginDir, plugin.name);
+    await validateReleaseVersion(pluginDir, plugin, "cursor");
   }
 }
 
@@ -161,6 +185,7 @@ async function validateCodexMarketplace() {
     }
 
     await validateCodexPlugin(pluginDir, plugin.name);
+    await validateReleaseVersion(pluginDir, plugin, "codex");
   }
 }
 
@@ -211,6 +236,7 @@ async function validateCodebuddyMarketplace() {
     }
 
     await validateCodebuddyPlugin(pluginDir, plugin.name);
+    await validateReleaseVersion(pluginDir, plugin, "codebuddy");
   }
 }
 
