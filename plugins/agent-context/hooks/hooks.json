@@ -1,16 +1,4 @@
 {
   "version": 1,
-  "hooks": {
-    "sessionStart": [
-      {
-        "command": "scripts/session-start.sh"
-      }
-    ],
-    "stop": [
-      {
-        "command": "scripts/stop-work-review.sh",
-        "loop_limit": 1
-      }
-    ]
-  }
+  "hooks": {}
 }

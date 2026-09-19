@@ -1,28 +1,4 @@
 {
   "description": "agent-context lifecycle hooks for CodeBuddy",
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "startup|resume|clear|compact",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"${CODEBUDDY_PLUGIN_ROOT}/hooks/scripts/session-context.py\" codebuddy",
-            "statusMessage": "Loading agent-context work record"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"${CODEBUDDY_PLUGIN_ROOT}/hooks/scripts/work-signal.py\" codebuddy",
-            "statusMessage": "Checking modified code size"
-          }
-        ]
-      }
-    ]
-  }
+  "hooks": {}
 }
