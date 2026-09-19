@@ -8,25 +8,40 @@ const repoRoot = process.cwd();
 const errors = [];
 const warnings = [];
 
-// Size limits on the always-applied rule are a review trigger, not a spending cap.
-// The original 3600-char ceiling was justified on cost, and that premise does not
-// hold: measured 2026-09-01, the body is 3566 chars (~890 tokens) — 0.45% of a 200k
-// context window. What actually degrades as the file grows is instruction weight,
-// and this project has recorded that failure twice (2026-07-01: prose conventions
-// get ignored under context pressure; 2026-08-13: a clause that "read as coverage
-// but caught nothing"). A char count is a crude proxy for that, so it warns.
+// This soft line is a review trigger about instruction weight, not a spending cap
+// and not the host limit below. The original 3600-char ceiling was justified on
+// cost, and that premise does not hold: measured 2026-09-01, the body is 3566 chars
+// (~890 tokens) — 0.45% of a 200k context window. What actually degrades as the
+// file grows is instruction weight, and this project has recorded that failure
+// twice (2026-07-01: prose conventions get ignored under context pressure;
+// 2026-08-13: a clause that "read as coverage but caught nothing"). A char count is
+// a crude proxy for that, so it warns rather than failing.
 //
-// Soft line: the size the 2026-08-27 audit judged bloated (4242), rounded down.
-// Crossing it means re-run the clause audit. The second line is a stronger review
-// signal for likely misplaced detail, not a correctness failure: size is too crude
-// a proxy to block a capability the protocol genuinely needs.
-//
-// The audit asks about cost as well as value, because nothing else here does: both
-// stop-hook signals push toward more work and these lines measure resident context,
-// not the work the protocol imposes. A clause with no off-switch for trivial tasks
-// is the growth to cut first (2026-09-01).
+// Its value is the size the 2026-08-27 audit judged bloated (4242), rounded down.
+// Crossing it means re-run the clause audit; size alone is too crude a proxy to
+// block a capability the protocol genuinely needs. The audit asks about cost as
+// well as value, because nothing else here does: both stop-hook signals push
+// toward more work and this line measures resident context, not the work the
+// protocol imposes. A clause with no off-switch for trivial tasks is the growth to
+// cut first (2026-09-01). A previous second review line shared the 6000 value for
+// unrelated reasons; it was removed so one number does not carry two meanings.
 const ALWAYS_ON_SOFT_CHARS = 4200;
-const ALWAYS_ON_STRONG_REVIEW_CHARS = 6000;
+
+// Hard host limit, not a review proxy. CodeBuddy support reported on 2026-09-18
+// that its rule-injection budget is 6000 characters and that an over-budget rule
+// is dropped SILENTLY: the IDE still logs "Successfully loaded plugin rule",
+// lists it as always-applied and enabled, yet the text never reaches the model.
+// That failure cost a full debugging session, so it must fail the build.
+//
+// Measured over the WHOLE file, not just the body: the reported figure was not
+// broken down into frontmatter vs body, and the file is the only figure that
+// cannot understate the cost. If the real budget turns out to exclude
+// frontmatter, this is conservative by ~90 chars; the reverse mistake is silent.
+// Aggregate budgets across several rules and host wrapper overhead are unknown.
+const HOST_INJECTION_LIMIT_CHARS = 6000;
+// Editing margin: crossing this is not a defect, it means the next clause needs
+// compression first. Without it the limit becomes a cliff reachable by one line.
+const HOST_INJECTION_HEADROOM_CHARS = 5700;
 
 function addError(message) {
   errors.push(message);
@@ -87,156 +102,97 @@ async function validateReleaseVersion(pluginDir, plugin, host) {
   }
 }
 
-async function validateMarketplace() {
-  const marketplacePath = path.join(repoRoot, ".cursor-plugin", "marketplace.json");
-  if (!(await pathExists(marketplacePath))) {
-    addError(".cursor-plugin/marketplace.json not found");
-    return;
-  }
+// One marketplace.json per host, all with the same skeleton: name, plugins array,
+// a source path per entry. Only four things differ, so they are data here rather
+// than three copies of the same loop. Adding a host means one row, not a rewrite.
+//
+//   requireRelative — Codex and CodeBuddy resolve the path against the marketplace
+//     root, so it must start with './'. Cursor accepts any resolvable path.
+//   required — extra fields beyond name/source (Codex: policy + category, because
+//     the desktop UI hides a plugin that is not installable; CodeBuddy: the
+//     marketplace card needs a description).
+//
+// Source shape is shared: Codex nests it under source.path, the other two use a
+// bare string. `source` is optional in the error text only because one host hides
+// it one level deeper.
+const MARKETPLACES = [
+  {
+    host: "cursor",
+    file: ".cursor-plugin/marketplace.json",
+    requireRelative: false,
+    required: [],
+    validate: validatePlugin,
+  },
+  {
+    host: "codex",
+    file: ".agents/plugins/marketplace.json",
+    requireRelative: true,
+    required: ["policy.installation", "policy.authentication", "category"],
+    validate: validateCodexPlugin,
+  },
+  {
+    host: "codebuddy",
+    file: ".codebuddy-plugin/marketplace.json",
+    requireRelative: true,
+    required: ["description"],
+    validate: validateCodebuddyPlugin,
+  },
+];
 
-  const marketplace = await readJSON(marketplacePath);
-  if (!marketplace) {
-    addError(".cursor-plugin/marketplace.json is invalid JSON");
-    return;
-  }
-
-  if (!marketplace.name) {
-    addError("marketplace.json: missing 'name'");
-  }
-
-  if (!marketplace.plugins || !Array.isArray(marketplace.plugins)) {
-    addError("marketplace.json: missing or invalid 'plugins' array");
-    return;
-  }
-
-  for (const plugin of marketplace.plugins) {
-    if (!plugin.name) {
-      addError("marketplace.json: plugin entry missing 'name'");
-      continue;
-    }
-    if (!plugin.source) {
-      addError(`marketplace.json: plugin '${plugin.name}' missing 'source'`);
-      continue;
-    }
-
-    const pluginDir = path.resolve(repoRoot, plugin.source);
-    if (!(await pathExists(pluginDir))) {
-      addError(`marketplace.json: plugin '${plugin.name}' source path does not exist: ${plugin.source}`);
-      continue;
-    }
-
-    await validatePlugin(pluginDir, plugin.name);
-    await validateReleaseVersion(pluginDir, plugin, "cursor");
-  }
+function getPath(object, dotted) {
+  return dotted.split(".").reduce((node, key) => node?.[key], object);
 }
 
-async function validateCodexMarketplace() {
-  const marketplacePath = path.join(repoRoot, ".agents", "plugins", "marketplace.json");
+async function validateMarketplace({ host, file, requireRelative, required, validate }) {
+  const marketplacePath = path.join(repoRoot, file);
+  const source = path.relative(repoRoot, marketplacePath);
   if (!(await pathExists(marketplacePath))) {
-    addError(".agents/plugins/marketplace.json not found (Codex marketplace)");
+    addError(`${source} not found`);
     return;
   }
 
   const marketplace = await readJSON(marketplacePath);
   if (!marketplace) {
-    addError(".agents/plugins/marketplace.json is invalid JSON");
+    addError(`${source} is invalid JSON`);
     return;
   }
-
   if (!marketplace.name) {
-    addError("codex marketplace.json: missing 'name'");
+    addError(`${source}: missing 'name'`);
   }
-
-  if (!marketplace.plugins || !Array.isArray(marketplace.plugins)) {
-    addError("codex marketplace.json: missing or invalid 'plugins' array");
+  if (!Array.isArray(marketplace.plugins)) {
+    addError(`${source}: missing or invalid 'plugins' array`);
     return;
   }
 
   for (const plugin of marketplace.plugins) {
     if (!plugin.name) {
-      addError("codex marketplace.json: plugin entry missing 'name'");
+      addError(`${source}: plugin entry missing 'name'`);
       continue;
     }
 
     const sourcePath = typeof plugin.source === "string" ? plugin.source : plugin.source?.path;
     if (typeof sourcePath !== "string") {
-      addError(`codex marketplace.json: plugin '${plugin.name}' missing 'source.path'`);
+      addError(`${source}: plugin '${plugin.name}' missing 'source' (a path string, or an object with 'path')`);
       continue;
     }
-    if (!sourcePath.startsWith("./")) {
-      addError(`codex marketplace.json: plugin '${plugin.name}' source.path must start with './'`);
+    if (requireRelative && !sourcePath.startsWith("./")) {
+      addError(`${source}: plugin '${plugin.name}' source must start with './'`);
     }
 
-    // Codex resolves source.path relative to the marketplace root, which for a
-    // repo marketplace is the repository root.
     const pluginDir = path.resolve(repoRoot, sourcePath);
     if (!(await pathExists(pluginDir))) {
-      addError(`codex marketplace.json: plugin '${plugin.name}' source path does not exist: ${sourcePath}`);
+      addError(`${source}: plugin '${plugin.name}' source path does not exist: ${sourcePath}`);
       continue;
     }
 
-    for (const field of ["installation", "authentication"]) {
-      if (!plugin.policy?.[field]) {
-        addError(`codex marketplace.json: plugin '${plugin.name}' missing 'policy.${field}'`);
+    for (const field of required) {
+      if (!getPath(plugin, field)) {
+        addError(`${source}: plugin '${plugin.name}' missing '${field}'`);
       }
     }
-    if (!plugin.category) {
-      addError(`codex marketplace.json: plugin '${plugin.name}' missing 'category'`);
-    }
 
-    await validateCodexPlugin(pluginDir, plugin.name);
-    await validateReleaseVersion(pluginDir, plugin, "codex");
-  }
-}
-
-async function validateCodebuddyMarketplace() {
-  const marketplacePath = path.join(repoRoot, ".codebuddy-plugin", "marketplace.json");
-  if (!(await pathExists(marketplacePath))) {
-    addError(".codebuddy-plugin/marketplace.json not found (CodeBuddy marketplace)");
-    return;
-  }
-
-  const marketplace = await readJSON(marketplacePath);
-  if (!marketplace) {
-    addError(".codebuddy-plugin/marketplace.json is invalid JSON");
-    return;
-  }
-
-  if (!marketplace.name) {
-    addError("codebuddy marketplace.json: missing 'name'");
-  }
-
-  if (!marketplace.plugins || !Array.isArray(marketplace.plugins)) {
-    addError("codebuddy marketplace.json: missing or invalid 'plugins' array");
-    return;
-  }
-
-  for (const plugin of marketplace.plugins) {
-    if (!plugin.name) {
-      addError("codebuddy marketplace.json: plugin entry missing 'name'");
-      continue;
-    }
-    if (!plugin.description) {
-      addError(`codebuddy marketplace.json: plugin '${plugin.name}' missing 'description'`);
-    }
-
-    const sourcePath = typeof plugin.source === "string" ? plugin.source : plugin.source?.path;
-    if (typeof sourcePath !== "string") {
-      addError(`codebuddy marketplace.json: plugin '${plugin.name}' missing 'source'`);
-      continue;
-    }
-    if (!sourcePath.startsWith("./")) {
-      addError(`codebuddy marketplace.json: plugin '${plugin.name}' source must start with './'`);
-    }
-
-    const pluginDir = path.resolve(repoRoot, sourcePath);
-    if (!(await pathExists(pluginDir))) {
-      addError(`codebuddy marketplace.json: plugin '${plugin.name}' source path does not exist: ${sourcePath}`);
-      continue;
-    }
-
-    await validateCodebuddyPlugin(pluginDir, plugin.name);
-    await validateReleaseVersion(pluginDir, plugin, "codebuddy");
+    await validate(pluginDir, plugin.name);
+    await validateReleaseVersion(pluginDir, plugin, host);
   }
 }
 
@@ -256,6 +212,19 @@ async function validateCodebuddyPlugin(pluginDir, pluginName) {
   for (const field of ["name", "version", "description"]) {
     if (!manifest[field]) {
       addError(`CodeBuddy plugin '${pluginName}': plugin.json missing required field '${field}'`);
+    }
+  }
+
+  // A declared directory is not scanned recursively: 2026-09-18 host logs reported
+  // "Plugin agent-context: 0 skill(s)" for "skills": ["./skills/"], where each skill
+  // lives in its own subdirectory with SKILL.md. Declare each SKILL.md file instead;
+  // a directory entry silently yields no skills in the host UI.
+  if (manifest.skills !== undefined) {
+    const declared = Array.isArray(manifest.skills) ? manifest.skills : [manifest.skills];
+    for (const entry of declared) {
+      if (typeof entry !== "string" || !entry.endsWith("SKILL.md")) {
+        addError(`CodeBuddy plugin '${pluginName}': 'skills' entries must name a SKILL.md file (a bare directory is not discovered); omit the field to use skills/ convention`);
+      }
     }
   }
 
@@ -476,14 +445,20 @@ async function validatePlugin(pluginDir, pluginName) {
           addError(`Rule '${file}': missing frontmatter 'description'`);
         }
         if (/^alwaysApply:\s*true\s*$/m.test(content)) {
-          const bodyChars = ruleBody(content).length;
-          if (bodyChars > ALWAYS_ON_STRONG_REVIEW_CHARS) {
-            addWarning(
-              `Rule '${file}': always-applied body is ${bodyChars} chars, past the ${ALWAYS_ON_STRONG_REVIEW_CHARS} strong-review line. Not a failure. Explain why the added capability must stay always-on rather than move into a skill, then audit scope and duplication.`,
+          const fileChars = content.length;
+          if (fileChars > HOST_INJECTION_LIMIT_CHARS) {
+            addError(
+              `Rule '${file}': always-applied file is ${fileChars} chars, over the ${HOST_INJECTION_LIMIT_CHARS} host injection limit. CodeBuddy drops an over-budget rule silently while still reporting it as loaded and enabled, so the protocol would never reach the model. Compress wording or move on-demand detail into a skill; do not raise this limit to fit.`,
             );
-          } else if (bodyChars > ALWAYS_ON_SOFT_CHARS) {
+          } else if (fileChars > HOST_INJECTION_HEADROOM_CHARS) {
             addWarning(
-              `Rule '${file}': always-applied body is ${bodyChars} chars, past the ${ALWAYS_ON_SOFT_CHARS} review line. Not a failure. Re-run the clause audit: does each clause prevent a material observed or predictable failure, does anything duplicate a skill or the Ownership table, and does each clause name a condition that turns it off on trivial work?`,
+              `Rule '${file}': always-applied file is ${fileChars} chars, ${HOST_INJECTION_LIMIT_CHARS - fileChars} below the ${HOST_INJECTION_LIMIT_CHARS} host injection limit. Not a failure. Compress before adding clauses, because crossing the limit silently drops the whole rule.`,
+            );
+          }
+          const bodyChars = ruleBody(content).length;
+          if (bodyChars > ALWAYS_ON_SOFT_CHARS) {
+            addWarning(
+              `Rule '${file}': always-applied body is ${bodyChars} chars, past the ${ALWAYS_ON_SOFT_CHARS} review line. Not a failure. Re-run the clause audit: does each clause prevent a material observed or predictable failure, does anything duplicate a skill or the Project Memory table, and does each clause name a condition that turns it off on trivial work?`,
             );
           }
         }
@@ -516,39 +491,6 @@ async function validatePlugin(pluginDir, pluginName) {
     }
   }
 
-  // Check commands
-  const commandsDir = path.join(pluginDir, "commands");
-  if (await pathExists(commandsDir)) {
-    const files = await fs.readdir(commandsDir);
-    for (const file of files) {
-      if (file.endsWith(".md")) {
-        const content = await fs.readFile(path.join(commandsDir, file), "utf8");
-        if (!content.includes("name:") || !content.includes("description:")) {
-          addError(`Command '${file}': missing frontmatter 'name' or 'description'`);
-        }
-      }
-    }
-  }
-
-  // Check agents (subagents)
-  const agentsDir = path.join(pluginDir, "agents");
-  if (await pathExists(agentsDir)) {
-    const files = await fs.readdir(agentsDir);
-    for (const file of files) {
-      if (file.endsWith(".md")) {
-        const content = await fs.readFile(path.join(agentsDir, file), "utf8");
-        if (!content.includes("name:") || !content.includes("description:")) {
-          addError(`Agent '${file}': missing frontmatter 'name' or 'description'`);
-        }
-        const baseName = file.replace(/\.md$/, "");
-        const nameMatch = content.match(/^name:\s*([^\n]+)/m);
-        if (nameMatch && nameMatch[1].trim() !== baseName) {
-          addError(`Agent '${file}': frontmatter name '${nameMatch[1].trim()}' must match filename`);
-        }
-      }
-    }
-  }
-
   // Check hooks
   const hooksJsonPath = path.join(pluginDir, "hooks", "hooks.json");
   if (await pathExists(hooksJsonPath)) {
@@ -570,38 +512,15 @@ async function validatePlugin(pluginDir, pluginName) {
     }
   }
 
-  // Check hook scripts exist
-  if (hooksJsonPath && await pathExists(hooksJsonPath)) {
-    const hooksJson = await readJSON(hooksJsonPath);
-    if (hooksJson && hooksJson.hooks) {
-      for (const [hookType, hookList] of Object.entries(hooksJson.hooks)) {
-        for (const hook of hookList) {
-          if (hook.command) {
-            const scriptPath = path.join(pluginDir, "hooks", hook.command);
-            if (!(await pathExists(scriptPath))) {
-              addError(`Hook '${hookType}': script not found: ${hook.command}`);
-            } else {
-              try {
-                await fs.access(scriptPath, fs.constants.X_OK);
-              } catch {
-                addWarning(`Hook '${hookType}': script is not executable: ${hook.command}`);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
   await validateHostNeutrality(pluginDir, pluginName);
 }
 
 async function main() {
   console.log("Validating agent-context plugin structure...\n");
 
-  await validateMarketplace();
-  await validateCodexMarketplace();
-  await validateCodebuddyMarketplace();
+  for (const marketplace of MARKETPLACES) {
+    await validateMarketplace(marketplace);
+  }
 
   // Check for logo
   const logoPath = path.join(repoRoot, "plugins", "agent-context", "assets", "logo.svg");

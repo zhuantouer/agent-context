@@ -32,7 +32,6 @@ shutil.copytree(
     ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.pyo", ".DS_Store", ".plugins-cache.json*"),
 )
 PY
-  chmod +x "$dest"/hooks/scripts/*.sh
 }
 
 install_cursor() {
@@ -155,7 +154,7 @@ install_codebuddy() {
   activate_codebuddy_plugin
   echo "  Next: /reload-plugins in CodeBuddy, or restart CodeBuddy IDE"
   echo "  Verify: /plugin (Installed tab) or: codebuddy --plugin-dir ${dest}"
-  echo "  Protocol comes from the plugin's rules/; SessionStart reads the work record"
+  echo "  Protocol comes from the plugin's rules/; no session hook is needed"
 }
 
 HOST="${1:-cursor}"
