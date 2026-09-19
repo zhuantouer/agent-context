@@ -2,7 +2,7 @@
 
 **Keep the goal, the conclusions, and the work that led there.** `agent-context` gives AI-assisted projects a durable work record in plain Markdown, shared by [Cursor](https://cursor.com/cn/docs/plugins), Codex, and [CodeBuddy](https://www.codebuddy.cn/docs/cli/plugins).
 
-One protocol, three skills, and lightweight Python-standard-library hooks. No index, database, daemon or MCP server. The agent maintains `.agent-context/PROGRESS.md`; new sessions read its current sections directly. There is no separate handoff to prepare or keep in sync.
+One protocol, two skills, and lightweight Python-standard-library hooks. No index, database, daemon or MCP server. The agent maintains `.agent-context/PROGRESS.md`; new sessions read its current sections directly. There is no separate handoff to prepare or keep in sync.
 
 ## What it solves
 
@@ -146,14 +146,14 @@ Cursor, Codex, and CodeBuddy work today. Claude Code, OpenCode, and Pi do not ye
 | **OpenCode** | Thin JS/TS plugin in `opencode.json`. Deliver the protocol via `experimental.chat.messages.transform`, register `skills/` via the `config` hook (same pattern as [Superpowers for OpenCode](https://github.com/obra/superpowers/blob/main/docs/README.opencode.md)). Spawn the existing Python hooks instead of rewriting them. |
 | **Pi** | A pi package (`pi.skills` + `pi.extensions`). Deliver the protocol on `before_agent_start`, advisory nudge on `agent_settled`. Again: call the Python hooks; don't fork the protocol. |
 
-**Invariants for any host PR:** one canonical `rules/agent-context-core.mdc` (every host reads it; none restate it); the work record is read by the agent, never injected; skills stay host-neutral; stop signals stay advisory (no forced continuation).
+**Invariants for any host PR:** one canonical `rules/agent-context-core.mdc` (every host reads it; none restate it); the work record is read by the agent, never injected; skills stay host-neutral; if a host adds a Stop/settled nudge it stays advisory (no forced continuation) — no host registers one today.
 
 ## Philosophy
 
 Inspired by AgenticMetaEngineering (Tencent-internal, by r***hou) and [Superpowers](https://github.com/obra/superpowers), but **radically simplified**:
 
 - **No 8-stage workflow.** No gate audits. No mandatory worktrees.
-- **No 20+ plugins.** One plugin, one rule file, three skills.
+- **No 20+ plugins.** One plugin, one rule file, two skills.
 - **No per-requirement directory scaffolding.** Just `.agent-context/`.
 - **The agent maintains the context, not you.** You just code.
 

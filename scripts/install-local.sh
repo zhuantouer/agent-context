@@ -29,7 +29,7 @@ import sys
 
 shutil.copytree(
     sys.argv[1], sys.argv[2], symlinks=True,
-    ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.pyo", ".DS_Store", ".plugins-cache.json*"),
+    ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.pyo", ".DS_Store", ".plugins-cache.json*", "*.bak"),
 )
 PY
 }
