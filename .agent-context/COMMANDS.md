@@ -32,7 +32,7 @@ The smoke tests only prove the scripts work, not that Codex runs them. To check 
 - The bytes Codex actually runs live in `~/.codex/plugins/cache/personal/agent-context/<version>/`, not in `~/.codex/plugins/agent-context/`. Smoke-test that copy when debugging a live install.
 - Plugin load errors: `sqlite3 ~/.codex/logs_2.sqlite "SELECT datetime(ts,'unixepoch','localtime'), level, substr(feedback_log_body,1,150) FROM logs WHERE target LIKE '%plugins%' AND level='WARN' ORDER BY id DESC LIMIT 10;"` — a `configured non-curated plugin no longer exists in discovered marketplaces` warning means `~/.codex/config.toml` enables a plugin name the marketplace does not declare.
 - Enabled names must match: compare `rg 'agent-context' ~/.codex/config.toml` against the `name` in `~/.agents/plugins/marketplace.json`.
-- In the app: the plugin appears under Plugins, and a new session flashes the `statusMessage` from `hooks/codex-hooks.json` ("Loading agent-context protocol and work record").
+- In the app: the plugin appears under Plugins, and a new session flashes the `statusMessage` from `hooks/codex-hooks.json` ("加载 Agentic 方法论").
 - Behavioral: ask where current conclusions and detailed history belong. Expect `PROGRESS.md` for goal/now/milestones, `worklog/YYYY-MM-DD.md` for evidence, no daily handoff or write on unchanged status. Run the linked replay, including date gaps and interleaved tasks.
 
 ## Build & Deploy

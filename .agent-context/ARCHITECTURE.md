@@ -1,7 +1,7 @@
 # Project Architecture
 
 ## Overview
-`agent-context` is a lightweight goal-directed work-memory plugin. `PROGRESS.md` is the short goal/now/milestone map; `worklog/YYYY-MM-DD.md` holds detailed task evidence. Relevant links, not dates, connect sessions. One protocol and three skills serve Cursor, Codex and CodeBuddy; no separate handoff artifact.
+`agent-context` is a lightweight goal-directed work-memory plugin. `PROGRESS.md` is the short goal/now/milestone map; `worklog/YYYY-MM-DD.md` holds detailed task evidence. Relevant links, not dates, connect sessions. One protocol and two skills serve Cursor, Codex and CodeBuddy; no separate handoff artifact.
 
 ## Tech Stack
 - Language: Markdown rules/skills, JSON manifests, Python hook logic, Bash entry points, Node.js validation
@@ -33,7 +33,7 @@ _Verified against: worktree based on `11823a4`, 2026-09-17. This review covers `
 | Module | Responsibility | Boundary |
 |--------|----------------|----------|
 | `rules/agent-context-core.mdc` | The operating protocol: startup, goal alignment, execution, efficiency, evidence, response style, project memory | Only canonical copy. Cursor and CodeBuddy load it as an always-applied rule; the Codex hook reads and injects it. Nothing else may restate it. Size is a review signal, not a cap: the validator warns past 4200 chars and warns more strongly past 6000. |
-| `skills/*/SKILL.md` | Three workflows: bootstrap, sync knowledge, maintain state map and dated evidence | `update-progress` owns PROGRESS/worklog templates, task-link navigation and lossless legacy migration. No daily rollover or handoff skill; shared content stays host-neutral. |
+| `skills/*/SKILL.md` | Two workflows: `bootstrap-context` owns knowledge files (structure, commands, config, conventions, decisions); `update-progress` owns state (`PROGRESS.md` + `worklog/`) | `update-progress` owns PROGRESS/worklog templates, task-link navigation and lossless legacy migration. Knowledge refresh is incremental, never a rewrite. No sync skill (`sync-context` retired 2026-09-19), no daily rollover or handoff skill; shared content stays host-neutral. |
 | `hooks/scripts/hook_payload.py` | Parse a host hook payload; resolve the project directory; name which hosts use Claude I/O and which inject the protocol | Knows each host's field precedence. No product logic. |
 | `hooks/scripts/session-context.py` | Deliver the protocol body for Codex only (no work-record injection) | Reads `rules/agent-context-core.mdc` minus frontmatter. Cursor and CodeBuddy load the rule through `rules/`, so the hook does nothing for them. No reads of `.agent-context/`, no writes, no migration. Fails open. |
 | `hooks/hooks.json` / `hooks/codex-hooks.json` / `hooks/codebuddy-hooks.json` | Per-host hook wiring | Separate files: Cursor uses camelCase events and a flat command; Codex and CodeBuddy use PascalCase nested Claude-style hooks. |
