@@ -9,9 +9,10 @@
 
 ## Validation Profile
 - Plugin rules, skills, hooks, manifests, marketplaces, or docs: `node scripts/validate-template.mjs`
+- Always-applied rule edits: the validator fails if the whole rule file exceeds 6000 characters, the CodeBuddy injection budget, because an over-budget rule is dropped silently while still reported as loaded. It warns past 5700 with the remaining margin. Compress wording or move on-demand detail into a skill; never raise the limit to fit. A passing check does not prove the text reached the model — confirm in a fresh chat after an authorized reload.
 - Hook script changes: the validator, plus `python3 scripts/test-hooks.py`, plus `bash -n` on the `.sh` entries. The smoke tests below stay useful for eyeballing real output, but the test suite is what must pass.
 - Release metadata/installer changes: the same suite checks version mismatches, independent marketplace metadata versions and generated-file exclusion using temporary repositories/HOME; it never installs into the user's real HOME. Also run `bash -n scripts/install-local.sh`.
-- `update-progress` template changes: the suite checks map/log partition, task links, no resume writes/log reads, legacy compatibility, whole-section omission, fence diagnostics and Codex limits. After editing a real map, inspect its rendered excerpt for missing conclusions/links rather than assuming a short line count fits.
+- `update-progress` template changes: the suite checks map/log partition, task links, no resume writes/log reads, legacy compatibility, fence diagnostics and host envelopes. After editing a real map, reread it in a fresh session to confirm conclusions and links survive, rather than assuming a short line count stays readable.
 - Prompt-edit test constraints: retain the two `markdown` template fences and recovery headings. The suite also pins `# Work Log — YYYY-MM-DD`, the example `## Pilot`, and requires any line containing `touched files` to include `do not list touched files` (case-insensitive). These are current test assertions, not a reason to freeze unrelated prose or `verified against` capitalization.
 - History migration: compare every source entry and deferred detail with destination text before removing it; verify local linked files and headings, including ambiguous dates/ranges. Do not treat counts alone as content preservation.
 - Goal-alignment and execution-efficiency behavior: start with `plugins/agent-context/README.md#minimal-decision-replay`; tools-disabled output is only a preflight. Full behavior acceptance still requires tool-enabled isolated tasks through actual plugin loading after authorized installation/reload. Compare spontaneous discovery, safe action, preserved results and total cost; automated checks do not prove judgment or savings.
@@ -20,22 +21,9 @@
 ## Hook Smoke Tests
 Run from the repository root with `S=plugins/agent-context/hooks/scripts` and `R=$PWD`.
 
-- Cursor session start (expect `additional_context` from current PROGRESS sections, no protocol; history stays on demand and over-budget sections are labelled omitted rather than truncated. Unified template fields fit a 2200-character body backstop, excluding wrappers/caveats; legacy sources have separate budgets). Note the Codex line below invokes the Python directly — `session-start.sh` hard-codes the `cursor` argument and silently ignores any argument you append:
-  `echo "{\"workspace_root\":\"$R\"}" | bash $S/session-start.sh`
-- Codex session start (expect `hookSpecificOutput.additionalContext` containing the protocol and the capsule, under the configured 10000 approximate-token threshold, not a character cap; current upstream estimates `ceil(UTF-8 bytes / 4)`, checked with ASCII and multibyte fixtures):
+- Codex session start (expect `hookSpecificOutput.additionalContext` containing the protocol body — the rule minus frontmatter, no work-record content; measured against the configured 10000 approximate-token threshold, not a character cap; current upstream estimates `ceil(UTF-8 bytes / 4)`, checked with ASCII and multibyte fixtures):
   `echo "{\"cwd\":\"$R\"}" | python3 $S/session-context.py codex`
-- CodeBuddy session start (expect `hookSpecificOutput.additionalContext` with the resume capsule and **no** protocol — CodeBuddy loads `rules/` itself):
-  `echo "{\"cwd\":\"$R\"}" | python3 $S/session-context.py codebuddy`
-- Cursor Stop (expect `{}` unless a modified code file reaches 600 lines; then an advisory `followup_message`, never a request to update records):
-  `echo "{\"status\":\"completed\",\"workspace_root\":\"$R\"}" | bash $S/stop-work-review.sh`
-- Cursor aborted turn (expect `{}` even with a large modified file):
-  `echo "{\"status\":\"aborted\",\"workspace_root\":\"$R\"}" | bash $S/stop-work-review.sh`
-- Codex completed turn (same large-file condition; `systemMessage`, never `decision: block`):
-  `echo "{\"last_assistant_message\":\"done\",\"cwd\":\"$R\"}" | python3 $S/work-signal.py codex`
-- Codex loop guard (expect `{}`):
-  `echo "{\"last_assistant_message\":\"done\",\"stop_hook_active\":true,\"cwd\":\"$R\"}" | python3 $S/work-signal.py codex`
-- CodeBuddy completed turn (same large-file condition; `systemMessage`, never `decision: block`):
-  `echo "{\"cwd\":\"$R\"}" | python3 $S/work-signal.py codebuddy`
+- Cursor and CodeBuddy configure no hooks (`hooks.json` and `codebuddy-hooks.json` are `{"hooks": {}}`) — both load the rule through `rules/`. Nothing to smoke-test here; verify instead that a fresh session actually receives the rule.
 
 ## Verifying a Live Codex Install
 The smoke tests only prove the scripts work, not that Codex runs them. To check the real install:

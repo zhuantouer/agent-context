@@ -7,10 +7,10 @@ Keep agent-assisted research and execution goal-directed across sessions. Succes
 One current-state map; daily logs own detail. No separate handoff, automatic daily files or calendar-based resume. Preserve capability and decisive context. Do not auto-commit or refresh installed plugins; leave unrelated plugin caches untouched. Preferences: CONVENTIONS.md.
 
 ## Current State
-2026-09-17: `a5d0de8` is the committed baseline. Prompt compression plus review corrections clarify read-before-edit, safe fixes, convention content and revision/scope evidence. Sync triggers now appear in its description; no skill merger or removed Recordkeeping safeguards. Rule body 7678→6741 chars; 63 regressions and structure checks pass. Not committed or installed. Equal compliance and better skill selection remain unverified; earlier replay was inconclusive. [Review evidence](worklog/2026-09-17.md#prompt-review-corrections); [replay limits](worklog/2026-09-17.md#minimal-decision-replay).
+2026-09-19: hooks reduced to Codex SessionStart (delivers the protocol); the Stop hook with its 600-line check and the `sync-context` skill are gone — knowledge files now belong to `bootstrap-context`, state files to `update-progress`. No host injects work-record content; the agent reads `PROGRESS.md` itself. Chinese rule canonical at ~3.3k chars (English 5977), no size warnings, English kept at `.en.mdc.bak`; rewritten as an executable method in 7 workflow-ordered sections. 30 tests pass (43 before StopSignal removal). [Plan A](worklog/2026-09-18.md#sessionstart-content-injection-removed-plan-a), [Method](worklog/2026-09-18.md#rule-rewritten-as-an-executable-working-method), [Slimming](worklog/2026-09-19.md#plugin-slimmed-to-one-hook-and-two-skills).
 
 ## Next Check
-Recommend committing the four compressed prompt files and this evidence. Before claiming equal behavior, compare against `a5d0de8` in controlled fresh sessions: skill triggers, safe intervention, normal waiting and simple-question restraint. Verify actual plugin loading only after authorized refresh.
+Commit the plan-A removal, Chinese rule switch and method rewrite, budget gate and discovery fix when authorized. After an authorized reload, probe a fresh chat without file reads for `# Agentic 方法论`: the budget check passing is necessary, not sufficient. Never raise the limit. Replay the Chinese rule, then drop `.en.mdc.bak`.
 
 ## Milestones
 - 2026-09-17 — Proactive-efficiency guidance added; recovery/packaging fixes validated. Decision-only replay remains preliminary. [Guidance](worklog/2026-09-17.md#proactive-lossless-efficiency), [review fixes](worklog/2026-09-17.md#review-follow-up).
@@ -21,3 +21,5 @@ Recommend committing the four compressed prompt files and this evidence. Before 
 
 ## Deferred
 Revisit host extensions, optional quality layers and historical-memory compaction only for a concrete need or measured failure. [Preserved opportunities and conditions](worklog/2026-09-16.md#deferred-opportunities).
+- Renaming the plugin `agent-context`: rejected on 2026-08-03 because all eight candidates were taken by competitors, so it bought no discovery. The new argument is different — the rule's centre of gravity moved from memory to working method, so the name no longer matches. Revisit after the behavior replay confirms the positioning; check candidate availability on all three marketplaces first, since that is what killed the last attempt. `.agent-context/` keeps its name either way.
+- Constraint check: the old `Current State` 800 / `Next Check` 400 caps died with plan A — `session-context.py` no longer reads `PROGRESS.md` at all (it injects the protocol for Codex only). Keep the map short because the rule asks for it, not because anything truncates it.
