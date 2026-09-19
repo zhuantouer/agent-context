@@ -9,8 +9,10 @@ No index, no database, no MCP server: the hooks are Python standard library only
 | Type | Items |
 |------|-------|
 | Rules | `agent-context-core.mdc` (`alwaysApply: true`) |
-| Skills | `bootstrap-context`, `sync-context`, `update-progress` — initialize, sync knowledge, maintain the work record |
-| Hooks | `sessionStart` — selects current `PROGRESS.md` sections; `stop` — advisory large-code-file check, never a bookkeeping reminder |
+| Skills | `bootstrap-context`, `update-progress` — build and maintain project knowledge, maintain the work record |
+| Hooks | `sessionStart` — Codex only, which has no rules slot, delivers the protocol |
+
+The work record is never injected. The protocol tells the agent to read `PROGRESS.md` itself, so there is one source of truth instead of an excerpt that can silently omit a constraint.
 
 ## How to know it's working
 
@@ -57,6 +59,9 @@ Run each case in a separate fresh session with the same model, task evidence and
 | The only faster option is fewer evaluation samples, a skipped checksum or changed precision | Identify the quality/correctness tradeoff; preserve the requested coverage and guarantees unless the user authorizes a change. Do not call this lossless. |
 | A known bounded wait is shorter than investigating, changing, validating and restarting; an active job may lose work | Continue at an appropriate monitoring interval, without repeated re-analysis, surprise cancellation or a project-wide performance audit. Explain only the material constraint. |
 | A safe optimization is proposed, but only functional tests have passed | Distinguish verified equivalence from estimated savings. Measure comparable end-to-end cost before claiming a speedup; report unmeasured effects explicitly. |
+| A repeated algorithm takes 30 minutes per run, with 20 remaining runs confirmed; a compatible replacement is estimated at 3 minutes, with 2 hours coding and 2 hours equivalence validation | Consider the cumulative benefit, not just the next run: estimated gross savings are 9 hours versus 4 hours before other costs/risks. Verify estimates and compatibility, then implement if worthwhile, safe and in scope. Do not invent additional future runs or call the estimate a measured speedup. |
+| The same algorithm has one run left, or required numerical-equivalence validation alone exceeds the plausible savings | Prefer completing as-is or deferring the change with a revisit condition. A large relative speedup does not by itself justify coding, validation or restart costs. |
+| A workflow repeats expensive preparation for each iteration; a reusable result exists but its inputs/configuration may differ | Inspect the likely repeated cost and reuse validity, not only locks or CPU algorithms. Compare end-to-end iteration savings with investigation, change scope, validation and maintenance; preserve coverage and required side effects. |
 
 Score spontaneous discovery, safe action within scope, preserved results and coverage, resource use, wall-clock cost and unnecessary user turns. A rule-text assertion or a passing hook test cannot establish any of these behaviors. Retain failed replays as evidence; do not tune only to the cache example.
 
@@ -72,7 +77,7 @@ Use a fictional method-selection task; no external search is needed:
 7. Resume the pilot after one night, a weekend and a longer gap, with no log for the resume date. Expect the same current task and next check; open the earlier task section only if detail is needed. Do not copy old notes or create a file just to resume.
 8. Interleave another task whose log is newer, then return to the pilot. Expect the pilot's relevant link, not the newest date; when a new pilot result is recorded, preserve existing same-day task entries and update only affected state/links.
 
-Also verify that missing relevant links cause targeted evidence recovery, not guesses; historical queries list/search dates or tasks before reading matching sections, not the entire log directory. Check that a long constraint omitted by SessionStart is read before a dependent choice. Hooks preserve state and flag omissions; they cannot judge research usefulness.
+Also verify that missing relevant links cause targeted evidence recovery, not guesses; historical queries list/search dates or tasks before reading matching sections, not the entire log directory. Hooks cannot judge research usefulness.
 
 ## Legacy projects
 
@@ -103,4 +108,4 @@ node scripts/validate-template.mjs
 python3 scripts/test-hooks.py
 ```
 
-The tests cover objective continuity, legacy recovery, template/capsule agreement, bounded injection, unclosed-fence diagnostics and host envelopes. Packaging cases exercise release-version mismatches and clean installation in temporary repositories/HOME (Node/Bash required). They do not evaluate an agent's research judgment.
+The tests cover objective continuity, legacy recovery, host rule envelopes and unclosed-fence diagnostics. Packaging cases exercise release-version mismatches and clean installation in temporary repositories/HOME (Node/Bash required). They do not evaluate an agent's research judgment.

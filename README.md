@@ -12,7 +12,7 @@ One protocol, three skills, and lightweight Python-standard-library hooks. No in
 | Agent re-reads the entire codebase every time | `.agent-context/ARCHITECTURE.md` gives a project map |
 | Commands re-discovered through trial & error | `.agent-context/COMMANDS.md` caches commands plus the validation profile |
 | Research produces branches instead of progress | `.agent-context/PROGRESS.md` preserves the objective, success criteria, subgoal expectations and remaining gaps |
-| New chats remember the task but forget its purpose | SessionStart selects the current sections of `PROGRESS.md`, not a second snapshot |
+| New chats remember the task but forget its purpose | The protocol makes the agent read `PROGRESS.md` at startup — the file itself, not a second snapshot |
 | Agent misses local project habits | `.agent-context/CONVENTIONS.md` stores style, workflow, boundaries, and user preferences |
 | Agent hallucinates or free-wheels | Built-in confirmation guardrails |
 | Hard-won lessons disappear after the chat | `.agent-context/MEMORY.md` captures project decisions, user corrections, failures, and mistakes to avoid |
@@ -33,7 +33,7 @@ The agent keeps a short state map, dated evidence logs and only useful supportin
 └── MEMORY.md         ← reusable lessons and decision rationale
 ```
 
-`PROGRESS.md` answers “where are we now?”; daily logs explain “what happened and why?”. SessionStart carries `Objective`, optional `Constraints`, `Current State` and optional `Next Check`, including a few task-relevant links. `Milestones` summarizes coarse outcomes, not every day or task. Neither logs nor milestones are automatically loaded; there is no full log index in PROGRESS. The [update-progress templates](plugins/agent-context/skills/update-progress/SKILL.md) define both formats.
+`PROGRESS.md` answers “where are we now?”; daily logs explain “what happened and why?”. At the start of a session the agent reads `Objective`, optional `Constraints`, `Current State` and optional `Next Check` from `PROGRESS.md` itself, including a few task-relevant links. `Milestones` summarizes coarse outcomes, not every day or task. Neither logs nor milestones are automatically loaded; there is no full log index in PROGRESS. The [update-progress templates](plugins/agent-context/skills/update-progress/SKILL.md) define both formats.
 
 For example, a record can say: the goal is shorter query latency; the current conclusion is that A meets the latency limit but recall is unmeasured; the next check measures recall and determines whether to select A; the dated log explains which experiment established the latency result. This is useful working knowledge, not an extra handoff ritual.
 
@@ -78,9 +78,9 @@ cd ~/workspace/agent-context
 
 **Cursor:** copies into `~/.cursor/plugins/local/`. Cursor **rejects symlinks** to paths outside that directory (`0 plugins loaded` in Cursor Plugins log). Re-run after editing, then **Developer: Reload Window**. Verify under **Settings → Plugins → Installed**.
 
-**CodeBuddy:** copies into `~/.codebuddy/plugins/` and, if the `codebuddy` CLI is on `PATH`, adds this repo as a marketplace and installs `agent-context@agent-context-marketplace`. Otherwise add the repo from **Settings → Plugins**, or test with `codebuddy --plugin-dir ./plugins/agent-context`. Then `/reload-plugins`. Protocol comes from the plugin's `rules/`; SessionStart reads the work record.
+**CodeBuddy:** copies into `~/.codebuddy/plugins/` and, if the `codebuddy` CLI is on `PATH`, adds this repo as a marketplace and installs `agent-context@agent-context-marketplace`. Otherwise add the repo from **Settings → Plugins**, or test with `codebuddy --plugin-dir ./plugins/agent-context`. Then `/reload-plugins`. The protocol comes from the plugin's `rules/`; no session hook is needed.
 
-**Codex:** copies into `~/.codex/plugins/` and runs `codex plugin add agent-context@personal`. Restart Codex and trust plugin hooks; without trust there is no protocol injection.
+**Codex:** copies into `~/.codex/plugins/` and runs `codex plugin add agent-context@personal`. Restart Codex and trust plugin hooks; Codex has no `rules/` slot, so without trust there is no protocol injection.
 
 ### Option B: Local marketplace
 
@@ -104,8 +104,7 @@ Skills follow the [Agent Skills](https://cursor.com/cn/docs/skills) format (`ski
 
 | Skill | Auto trigger | Manual |
 |-------|--------------|--------|
-| `bootstrap-context` | Missing context before substantive work; explicit initialize/refresh | `/bootstrap-context` |
-| `sync-context` | Material project or research-state changes | `/sync-context` |
+| `bootstrap-context` | Missing context before substantive work; knowledge updates (structure, commands, config, conventions, decisions) | `/bootstrap-context` |
 | `update-progress` | Goal/plan changes, stage outcomes; status queries without rewriting unchanged state | `/update-progress` |
 
 ## Rules
@@ -118,8 +117,7 @@ See [Cursor Rules docs](https://cursor.com/cn/docs/rules) for how `alwaysApply` 
 
 ## Hooks
 
-- `sessionStart` selects the current sections of `PROGRESS.md`, not its history. Normal excerpts fit a 2200-character body budget. Over-budget sections are explicitly omitted rather than sliced through a condition or negation; the agent reads the source section before a dependent decision. Cursor uses `additional_context`; Codex and CodeBuddy use `hookSpecificOutput.additionalContext`. Only Codex also injects the protocol.
-- `stop` retains the advisory check for modified code files of at least 600 lines. It does not infer progress from timestamps or request record updates. Aborted/error and guarded continuation turns stay quiet; failures do not block work.
+- `sessionStart` is registered for Codex only, which has no `rules/` slot: it delivers the protocol text. The work record is never injected — the protocol tells the agent to read `PROGRESS.md` itself, so there is one source of truth instead of an excerpt that can silently omit a constraint.
 
 ## Upgrading older projects
 
@@ -144,11 +142,11 @@ Cursor, Codex, and CodeBuddy work today. Claude Code, OpenCode, and Pi do not ye
 
 | Host | Rough approach |
 |------|----------------|
-| **Claude Code** | Closest to CodeBuddy's hook I/O. Add `.claude-plugin/plugin.json`, point hooks at the existing Python scripts. Smoke-test that plugin SessionStart actually surfaces `additionalContext` (some Claude builds have dropped it from plugin hooks). |
-| **OpenCode** | Thin JS/TS plugin in `opencode.json`. Inject protocol + work-record excerpt via `experimental.chat.messages.transform`, register `skills/` via the `config` hook (same pattern as [Superpowers for OpenCode](https://github.com/obra/superpowers/blob/main/docs/README.opencode.md)). Spawn the existing Python hooks instead of rewriting them. |
-| **Pi** | A pi package (`pi.skills` + `pi.extensions`). Inject on `before_agent_start`, advisory nudge on `agent_settled`. Again: call the Python hooks; don't fork the protocol. |
+| **Claude Code** | Closest to CodeBuddy's hook I/O. Add `.claude-plugin/plugin.json`, point hooks at the existing Python scripts. No session hook is needed. |
+| **OpenCode** | Thin JS/TS plugin in `opencode.json`. Deliver the protocol via `experimental.chat.messages.transform`, register `skills/` via the `config` hook (same pattern as [Superpowers for OpenCode](https://github.com/obra/superpowers/blob/main/docs/README.opencode.md)). Spawn the existing Python hooks instead of rewriting them. |
+| **Pi** | A pi package (`pi.skills` + `pi.extensions`). Deliver the protocol on `before_agent_start`, advisory nudge on `agent_settled`. Again: call the Python hooks; don't fork the protocol. |
 
-**Invariants for any host PR:** one canonical `rules/agent-context-core.mdc` (every host reads it; none restate it); skills stay host-neutral; stop signals stay advisory (no forced continuation).
+**Invariants for any host PR:** one canonical `rules/agent-context-core.mdc` (every host reads it; none restate it); the work record is read by the agent, never injected; skills stay host-neutral; stop signals stay advisory (no forced continuation).
 
 ## Philosophy
 

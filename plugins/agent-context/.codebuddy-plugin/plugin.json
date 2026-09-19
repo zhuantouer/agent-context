@@ -24,6 +24,9 @@
   ],
   "homepage": "https://github.com/thanezh/agent-context",
   "category": "Productivity",
-  "skills": ["./skills/"],
+  "skills": [
+    "./skills/bootstrap-context/SKILL.md",
+    "./skills/update-progress/SKILL.md"
+  ],
   "hooks": "./hooks/codebuddy-hooks.json"
 }

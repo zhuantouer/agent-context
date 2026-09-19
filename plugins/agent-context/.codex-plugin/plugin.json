@@ -27,7 +27,7 @@
   "interface": {
     "displayName": "Agent Context",
     "shortDescription": "Project memory in plain markdown. No index, no daemon, no MCP server.",
-    "longDescription": "Keep goals, current conclusions and coarse milestones in .agent-context/PROGRESS.md; preserve detailed evidence in worklog/YYYY-MM-DD.md. New sessions resume from the state map and follow task links only when needed, not by calendar date; there is no separate handoff to maintain. Supporting project knowledge is loaded on demand. Ships bootstrap-context, sync-context and update-progress skills, bounded SessionStart recovery and an advisory large-code-file Stop check. Hooks use Python standard library only; one source serves Cursor, Codex and CodeBuddy.",
+    "longDescription": "Keep goals, current conclusions and coarse milestones in .agent-context/PROGRESS.md; preserve detailed evidence in worklog/YYYY-MM-DD.md. New sessions resume from the state map and follow task links only when needed, not by calendar date; there is no separate handoff to maintain. Supporting project knowledge is loaded on demand. Ships bootstrap-context and update-progress skills and bounded SessionStart protocol delivery for Codex. Hooks use Python standard library only; one source serves Cursor, Codex and CodeBuddy.",
     "developerName": "thanezh",
     "category": "Productivity",
     "capabilities": [
