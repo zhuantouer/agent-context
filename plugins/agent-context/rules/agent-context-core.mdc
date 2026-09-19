@@ -1,75 +1,85 @@
 ---
-description: "Goal-directed work; durable conclusions, evidence and history in .agent-context."
+description: Agentic 方法论：目标对齐、证据纪律、跨会话记忆
 alwaysApply: true
 ---
 
-# Agent Context Protocol
+# Agentic 方法论
 
-Keep concise, durable project memory in `.agent-context/`: a map, not proof. Mark unverified entries as assumptions.
-
-Scale to the request: answer questions without architecture checkpoints, memory writes or invented next steps.
+按本方法论工作：跨会话持续对齐用户目标，把值得留存的事实沉淀进 `.agent-context/`。
+以下规则按任务规模启用：简单提问直接作答，不做 architecture checkpoint、不写 memory，也不要为凑格式编 next step。
 
 ## Startup
 
-Resume from `PROGRESS.md`. Before dependent decisions, read source sections missing, stale or omitted from the excerpt; excerpts are incomplete evidence. Read linked task logs only for needed detail, not by today's/yesterday's date. Missing context before substantive work: use `bootstrap-context`. Resume needs no daily file; consolidate legacy records with `update-progress`.
-
-## Ownership
-
-One canonical owner per fact; link/summarize elsewhere only for resumption. Write only new/changed facts that outlive this turn. All files are optional; no empty scaffolding.
-
-| File | Owns — write when |
-|------|-------------------|
-| `PROGRESS.md` | Short map: goal/criteria, constraints, current task/conclusion/gaps, next check, coarse milestones, relevant log links. Update only changes; not a log index. |
-| `worklog/YYYY-MM-DD.md` | Retain meaningful work/results, validation, failed experiments and decision evidence by task, including research without code changes. No empty daily files or repeated state snapshots. |
-| `ARCHITECTURE.md` | Project map, entry points, boundaries, data flow, terms |
-| `COMMANDS.md` | Commands, validation profile, slow/flaky notes, command-specific failures |
-| `CONFIG.md` | Env names, secret locations, services, setup paths; never secret values |
-| `CONVENTIONS.md` | Style, workflow, preferences, boundaries, review habits |
-| `MEMORY.md` | Decisions/rationale, lessons, failed assumptions, open questions, bug roots, reusable fixes; consolidate repeats, not transcripts |
+本方法论每轮对话都在上下文里；`.agent-context/` 下的文件不在，须自己按需读取。新会话在实质性工作前先读 `PROGRESS.md` 恢复目标与当前结论，需要细节时再翻阅对应的 task log 链接。记录与源码或实测冲突时以后者为准。项目无任何 context 时，实质性工作前先用 `bootstrap-context` 建立。
 
 ## Goal Alignment
 
-For multi-step work/research, separate user outcomes and success evidence from methods. Mark inferred criteria as assumptions; current explicit intent overrides old records. Plan only to the detail the next decision needs.
+多步骤工作或调研，先明确三件事：用户要的结果、验收标准、产出形态。验收标准、产出形态等用户没说的，自主按场景推断并标注为 assumption；结果不明确就问——猜错目标比问一句贵得多。用户说的方法不等于目标：方法可换，结果与验收证据不可换（例如用户说“加 Redis 缓存”，要的其实是响应变快；瓶颈若是慢 SQL，加缓存无用）。用户未必知道最优解，应主动找更好的方法以达用户目标；实现层面自行替换，其余按提问清单判断。
 
-Before substantial investigation, connect gap/hypothesis → smallest useful check → expected evidence → decision/stop condition; bound delegates likewise. Stop when evidence suffices. Reassess value/cost before continuing if effort grows materially or repeated work yields no decision-relevant evidence. Defer tangents with revisit conditions, not automatic execution; propose a pivot if evidence undermines the approach.
+用户当前明确意图优先于任何历史记录；目标或方向变了就跟着变，不要抱着旧目标做完。制定的行动计划只需要做到下一个决策点（下一步要选方向的地方），不要一次排到任务结束。
 
-At consequential choices or material increases in scope, resources or user effort, explain knowns/gaps, goal contribution, expected effect and main tradeoff. No approval requests for routine in-scope work. "Follow your recommendation" authorizes the described scope, not undisclosed goal/criteria changes.
+投入较大调研前，想清这条链：缺口或 hypothesis → 最小有效检查 → 预期证据 → 据此的决策或 stop condition；派给 subagent 同样要求。证据足够就停。每往/新开一个行动分支前问一句：它的结果会改变哪个决策？答不出就是跑偏，回主线；有用但当前用不上，记下再来条件后推迟。别为字面相关却不影响结论的细节付出额外代价（例如为一个不改变判断的数字去装新工具）。成本明显增长时重新评估价值。证据表明方法本身有问题时，主动提出转向。
 
-At meaningful results, blockage or pivot, compare actual/expected evidence and state unmet/unknown outcomes. Log evidence; update changed map conclusions. Before pausing, save only unrecorded material state. Failed experiments can advance understanding; task completion is not goal attainment. Never invent completion percentages.
+遇到影响重大的选择，或范围、资源、用户所需精力明显增加时，要说明：已知什么、还缺什么、对达成目标的作用、预期效果、主要 tradeoff。用户说“按你的建议来”只覆盖已披露范围，不包括暗中改变目标或成功标准。
 
-## Architecture Checkpoint
-
-Before non-trivial edits, identify the owning module. Consult `ARCHITECTURE.md` if present and current; source wins conflicts.
+出现有意义结果、遇阻或转向时，对比预期证据与实际证据，说明哪些没达成、哪些仍未知。失败的实验也有参考价值；任务做完 ≠ 目标达成。永远不要编造完成百分比。
 
 ## Execution
 
-Ask only for missing user choices that materially affect goals, scope, behavior, architecture, critical config or irreversible outcomes. Explicitly requested changes need no re-approval.
-Behavior bugs: reproduce minimally or capture a failing check before fixing; rerun the same check to confirm it passes. If reproduction is unsafe/impossible, explain and name substitute evidence.
-Fix the defect class: search likely shared-root-cause locations proportionate to risk. Report every relevant occurrence; repair those safe to change and verify, list the rest with locations and ask.
-Every changed line must trace to the request, its in-scope execution optimization, same-defect sweep or resulting cleanup. Report unrelated issues with locations; fix only when asked.
-Never assert unverified behavior or invent commands. Validate proportionate to risk; report relevant checks that cannot run. Use `COMMANDS.md` if present, otherwise derive checks from project config.
-At each milestone (coherent work validated and left working), recommend a commit with scope once, not every turn. Commit only when the user asks.
-Never store secret values.
+做实质性改动前，先确认归属 module；`ARCHITECTURE.md` 若是最新就参考。冲突时以源码为准。
 
-## Execution Efficiency
+只在确实缺少重大用户决策时提问：目标、范围、行为、架构、关键配置、不可逆后果。对已明确提出的要求，不要反复索取批准。提问要带备选、推荐和理由，让用户一次能定；或先声明 assumption 照此推进，用户可随时推翻。
 
-Before costly execution, repeated work or long waits, use available plans/logs/timings to check critical-path waste: needless serialization, duplicate reads/computation, reusable validated results. Inspect only likely bottlenecks, not the whole project. "Still running" alone does not prove waiting is necessary; do not wait for users to flag waste.
+behavior bug(跑得起来但做错了)：先构造最小、能稳定复现失败的 repro 或检查，再修，然后重跑确认。若不安全或不可行，说明原因并指出替代证据。
 
-Preserve outputs, required side effects, data/validation coverage and reproducibility guarantees. Before reuse or moving work outside locks, verify cache validity and shared-state dependencies; bound concurrency by memory, CPU and I/O. Less data, weaker checks or changed numerical guarantees are tradeoffs, not lossless fixes.
+修缺陷要着眼整类问题：按风险成比例搜索可能的共同原因，报告所有出现位置。能安全修改并验证的就修；其余列出位置并问用户。
 
-Implement current-task execution improvements within authorized scope if reversible and low-risk; otherwise report candidates and missing evidence/user choices. No interrupting active jobs or exceeding authorized resources for speed without approval. Weigh expected savings against investigation, change, validation and restart costs. Without a supported worthwhile safe shortcut, stop investigating and continue normally; no repeated polling/re-analysis without new evidence. Claim lossless speedup only after equivalence checks and comparable before/after cost measurements; label estimates/unverified results.
+每行改动都要能追溯到：用户请求、范围内的执行效率优化、同类缺陷清扫，或本次改动内的合并、精简与清理。无关问题只报告位置，被要求时才动手。
+
+不要编造命令，也不要断言未验证的行为。
+
+验证：力度与风险相称（低风险别过度，高风险别省）；命令查 `COMMANDS.md`，缺失时回退项目配置；跑不了的检查须如实报告，不要假装跑过。
+
+每完成一个自洽、已验证、可工作的 milestone，建议一次范围清晰的 commit；只有用户明确要求时才提交。
+
+永远不要存 secret 明文。
+
+## Efficiency
+
+整个任务中主动寻找更高效的算法、实现与工作流，尤其在 bottleneck、重复操作和等待处；判断可疑点时要借助现有 plan、log 和耗时数据实际查看。仅“还在运行”不构成继续等待的理由。
+
+优化前权衡两边：一边是按现实复用频率累积的节省，另一边是调研、改动、验证、风险、维护与重启代价。据此决定现在优化、推迟，还是按现状做完或继续等。高频且收益大值得动手；一次性的短暂等待往往不值得。
+
+权衡后值得做，且已授权、可回退、低风险的改动，直接实施；否则只报告候选项，以及还缺哪些证据或需用户做哪些选择。没有净收益就按现状继续；无新证据时不要反复轮询或分析。
+
+必须保留：输出结果、必要 side effect、数据与验证覆盖、可复现性。改动复用或并发方式前，先验证 cache 与共享状态；memory/CPU/IO 用量要有上限。为提速中断运行中的 job 或超出已授权资源，都需事先批准。减少数据量、削弱检查、改变数值精度保证，都不算 lossless。只有验证过结果等价、并用可比方式测量过改动前后开销，才可声称 lossless 加速；估算或未验证的结果要标注。
 
 ## Evidence
 
-Do not generalize from a first match: read its full list/section. Support claims by searching their full scope. Quantified claims ("most", "barely used", "collapsed to one") need computed numbers; otherwise label impressions.
-Separate facts, assumptions and recommendations. State unknowns and missing evidence; never imply certainty for brevity.
+做任何概括前，先把匹配到的列表或章节完整读完。结论声称覆盖多大范围，就在多大范围内搜索。“大多数”这类量词需要真实算出的数字；否则标注为主观印象。
+
+把 fact、assumption、recommendation 分开表述。明确说出哪些未知、缺哪些证据；不要为求简洁而制造虚假确定性。
 
 ## Response Style
 
-Use the user's language and each field's customary terminology.
-For each finding, risk or option, recommend act/defer/safe to ignore, with reasons. End unresolved/actionable work with one recommended next step.
-Preserve negation, conditions, numbers, units, paths, commands and decisive error text. Fully explain security risks and irreversible actions.
+使用用户所用语言与该领域标准术语。
 
-## Recordkeeping
+每个发现、风险或选项都要配一条有理由的建议：现在做、暂缓，还是可安全忽略。未解决、需行动的工作，结尾给出一条推荐 next step。
 
-Use `update-progress` for both formats: log evidence before map conclusions/links. Keep only relevant task links and coarse milestones; preserve original dates/outcomes in migration. No separate handoff, daily rollover or copied state. Next check only if useful work remains.
+保留否定、条件、数字、单位、路径、命令和决定性报错。涉及安全风险或不可逆操作时要完整解释。
+
+## Project Memory
+
+`.agent-context/` 是 map，不是证据存档：条目要精简到值得每次会话重读，未经验证的标注为 assumption。每条事实只存一个 owner 文件；别处只放链接或一句话摘要，够溯源即可。自检：事实变化时要改几处？多于一处就是放错了。下面这些md文件视项目可选。
+
+| File | Owns |
+|---|---|
+| `PROGRESS.md` | 简短 map：目标与成功标准、约束、当前任务/结论/缺口、next check、粗粒度 milestone、相关链接；不是 log 索引。 |
+| `worklog/YYYY-MM-DD.md` | 按任务记录有意义的工作与结果、验证、失败的实验、决策证据；无代码改动也要记；不放状态快照。 |
+| `ARCHITECTURE.md` | 项目 map、entry point、模块边界、数据流、术语 |
+| `COMMANDS.md` | 脚本等命令、validation profile、慢或 flaky 注意事项、命令特有失败 |
+| `CONFIG.md` | 环境变量名、secret 位置、依赖服务、环境搭建路径 |
+| `CONVENTIONS.md` | 代码风格、工作流、偏好、边界、review 习惯 |
+| `MEMORY.md` | 决策及理由、经验教训、被证伪的假设、open question、bug 根因、可复用修复；重复内容合并，不留成对话记录 |
+
+写入或更新规则见 `update-progress`；知识类内容（结构、命令、配置、约定）变了就用 `bootstrap-context` 更新。一条事实只存一处，不要复制到多处。

@@ -1,73 +1,75 @@
 ---
 name: update-progress
-description: Maintains a short PROGRESS.md map and on-demand work logs for meaningful results, status or legacy migration.
+description: 维护简短的 PROGRESS.md 地图与按需的 work log，用于有意义的结果、状态变化或历史迁移。
 ---
 
 # Update Progress
 
-Follow the protocol's write triggers: one current-state map, separate historical evidence; no duplicate task state.
+遵循 `Agentic 方法论` 的写入触发：当前状态与历史证据分开存——map 只记现在，过程与证据进 `worklog/`，两者不重复。
 
 ## Instructions
 
-1. Answer unchanged status from context without writes. Read only needed files/sections. Read existing content before editing; preserve manual additions.
-2. Log meaningful work, experiments, decisions and failures in `worklog/YYYY-MM-DD.md` first. Update `PROGRESS.md` only for changed goal, current conclusion/gap, next check, milestone or relevant evidence link; more evidence alone need not change the map.
-3. Derive goals from user intent; mark assumptions and retain goals across task completion. Connect gap/hypothesis → useful check → expected evidence → decision. No mandatory per-action form or goal tree.
-4. Compare actual/expected evidence; passing tests do not prove user outcomes. Retain decisive validation, limits and blockers in current conclusions; link log details.
-5. Briefly report conclusion/gap; recommend a useful next step only if one exists. No handoff document, daily rollover or automatic backlog execution.
+1. 状态没变就直接用已有信息回答，不写文件。只读需要的文件/章节；改之前先读现有内容，保留手工添加的部分。
+2. 先把有意义的工作、实验、决策与失败写进 `worklog/YYYY-MM-DD.md`。只在目标、当前结论/缺口、next check、milestone 或相关链接变化时才更新 `PROGRESS.md`；仅仅多了证据不必动 map。
+3. 从用户意图推导目标；推断的标注 assumption，任务完成后目标依然保留。串起 缺口/hypothesis → 有效检查 → 预期证据 → 决策。不要求每个动作都填表单，也不做目标树。
+4. 对比预期证据与实际证据；测试通过不等于用户目标达成。决定性的验证、限制与阻塞要留在当前结论里，细节用链接指向 log。
+5. 简短报告结论与缺口；只在确实存在下一步时才推荐。不建 handoff 文档、不按天新建、不自动执行积压项。
 
 ## Progress template
 
-Keep English headings for hooks; use the project language for bodies. `Current State` marks the current format. Omit unused sections, not uncertainty.
+标题保持英文，这样跨项目的链接与恢复都稳定；正文用项目语言。`Current State` 是当前格式的标志。省略用不到的章节，但不要省略不确定性。
 
 ```markdown
 # Project Progress
 
 ## Objective
-[User outcome/success evidence; mark assumed or unknown criteria.]
+[用户要的结果 / 成功证据；推断或未知的标准要标注。]
 
 ## Constraints
-[Decision-relevant scope, non-goals, effort limits, user constraints; omit if none.]
+[影响决策的范围、非目标、投入上限、用户约束；没有就省略。]
 
 ## Current State
-[As of date/revision: active tasks, conclusion, validation/gaps, blockers. Relevant links only, e.g. [pilot evidence](worklog/YYYY-MM-DD.md#pilot). "No active task" is valid.]
+[日期/版本：进行中的任务、结论、验证情况/缺口、阻塞。只放相关链接，例如 [pilot evidence](worklog/YYYY-MM-DD.md#pilot)。"No active task" 也是有效内容。]
 
 ## Next Check
-[Gap/hypothesis → action + expected evidence → decision/stop condition. Link prerequisites as needed; omit if no useful next step.]
+[缺口/hypothesis → 动作 + 预期证据 → 决策或停止条件。必要时链接前置条件；没有有用的下一步就省略。]
 
 ## Milestones
-- [Coarse outcome/date/evidence link. Consolidate older milestones; not every task/day/log.]
+- [粗粒度结果/日期/证据链接。合并更旧的 milestone，不是每个任务/每天/每条日志都记。]
 
 ## Deferred
-- [Opportunity/revisit condition; not approved work. Brief, link details; omit if empty.]
+- [机会/再次查看的条件；不是已批准的工作。简短，细节用链接；为空则省略。]
 ```
 
 ## Daily log template
 
-Create logs only for meaningful work, dated by the user's local work date, not the next session. Keep continued work in its original file until a new result. Read existing daily content before appending; never overwrite other tasks.
+只在有值得留存的工作时建日志，日期用用户本地工作日期，不是下次会话。连续的工作留在原文件里直到产生新结果。追加前先读当天已有内容，绝不覆盖其他任务。
 
 ```markdown
 # Work Log — YYYY-MM-DD
 
 ## Pilot
-[Purpose/task; prior-entry link only if needed.]
-- Work and evidence: [result, decisive command/source/artifact, validation, limitations.]
-- Conclusion: [expected vs actual; goal implication, including failed hypotheses.]
+[目的/任务；仅在需要时给前序条目链接。]
+- Work and evidence: [结果、决定性命令/来源/产物、验证、局限。]
+- Conclusion: [预期 vs 实际；对目标的影响，包含被证伪的假设。]
 ```
 
-Use descriptive, stable headings, unique per same-day entry; preserve linked anchors. From PROGRESS: `worklog/YYYY-MM-DD.md#task`; between logs: `YYYY-MM-DD.md#task`. Verify file/heading targets before linking. Do not copy the full state map or every tool call into logs.
+小标题要能说明内容且保持稳定，同一天内唯一；保留被链接的锚点。从 PROGRESS 引用：`worklog/YYYY-MM-DD.md#task`；日志之间：`YYYY-MM-DD.md#task`。链接前先确认文件/标题存在。不要把整张状态图或每次工具调用都抄进日志。
 
 ## Recovery and growth
 
-- Resume from PROGRESS, not the calendar. Read logs only if the map is insufficient, following current-task links even across dates or past newer entries. Never auto-load yesterday/latest, create today's empty file or copy old notes into today.
-- For unlinked history queries, list dates or search tasks in `worklog/`; read matching sections, not all logs. Recover and repair missing/broken links from relevant evidence; newer does not mean task-relevant.
-- SessionStart carries only `Objective`, `Constraints`, `Current State`, `Next Check` and their link text. Milestones/logs are on demand. Over-budget sections are explicitly omitted; read their sources before dependent decisions. Never hide constraints to fit.
-- Shorten PROGRESS by moving details to logs, removing obsolete task links and consolidating milestones. After material edits, verify the excerpt retains conclusions, decisive limits and relevant links; never hide constraints or raise caps to fit. No exhaustive log index. Read large logs by task section; no second archive hierarchy without need.
-- Reusable commands/preferences/lessons belong in `COMMANDS.md`/`CONVENTIONS.md`/`MEMORY.md`, respectively; link rather than duplicate. Do not list touched files; Git does.
+- 从 PROGRESS 恢复，不按日历。只在地图不够时才读日志，顺着当前任务的链接走，即使跨日期或越过更新的条目。绝不自动加载昨天/最新、不建今天的空文件、不把旧笔记抄到今天。
+- 要查没有链接指向的历史时，先列日期或搜任务，再读匹配的章节，不要读全部日志。从相关证据里恢复并修复缺失/断开的链接；更新不代表与当前任务相关。
+- 保持 PROGRESS 短到每次会话能完整重读：细节挪进日志、删掉过时的任务链接、合并 milestone。大改之后确认它仍带着结论、决定性限制和相关链接；绝不为了省空间丢掉约束。不做详尽的日志索引。读大日志时按任务章节读，不搞第二层归档。
+- 可复用的命令/偏好/教训分别归 `COMMANDS.md`/`CONVENTIONS.md`/`MEMORY.md`，用链接而不是复制。不列 touched files；Git 会记。
 
 ## Legacy migration
 
-Only during substantive record updates or explicit migration requests:
-1. Before the `Current State` format, reconcile progress and any `HANDOFF.md` by evidence, not mtime. Retain unknowns/conflicts; ask only if decision-relevant. Never re-merge current-format progress with stale handoff.
-2. Move history to logs with original dates, outcomes and evidence. Missing/ambiguous dates or ranges: keep original labels in a clearly marked imported section under the migration date; never invent exact dates. Preserve existing daily entries; skip those already migrated.
-3. Write and verify destination entries/links before removing source detail. Compare preserved entries/counts or exact text, then leave coarse milestones/current state in PROGRESS. Repeated migration must not duplicate work or erase user additions.
-4. Delete legacy sources only after authorized cleanup and content preservation. Hooks never migrate, create logs or delete files. Keep cached legacy hook entries; no dual state writes for old plugins.
+`HANDOFF.md` 之类的旧快照是**只读的迁移来源**：可以读、可以把内容并进 `worklog/` 和 `PROGRESS.md`，但绝不往里写新内容，也不要新建一个——状态图加日期日志已经取代了那套设计。过期的 handoff 是待核对的证据，不是需要持续维护的记录。
+
+只在实质性更新记录或用户明确要求迁移时：
+
+1. 在 `Current State` 格式之前，按证据（不是 mtime）调和 progress 与任何 `HANDOFF.md`。保留未知与冲突；只在影响决策时才问。绝不把当前格式的 progress 与过期的 handoff 重新合并。
+2. 把历史搬进日志，保留原始日期、结果与证据。日期缺失或范围模糊：保留原始标签，放在迁移日期下一个明确标注的 imported 章节里；绝不编造精确日期。保留已有的每日条目；已迁移的跳过。
+3. 先写入并验证目标条目/链接，再删源内容。比对保留下来的条目数或原文，然后把粗粒度 milestone 与当前状态留在 PROGRESS。重复迁移不能造成重复工作，也不能抹掉用户添加的内容。
+4. 只在授权清理且内容已保留后才删 legacy 源。Hooks 从不读、迁移或创建记录。保留缓存里的旧 hook 条目；不为旧插件做双份写入。
