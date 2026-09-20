@@ -1,7 +1,7 @@
 # Project Architecture
 
 ## Overview
-`agent-context` is a lightweight goal-directed work-memory plugin. `PROGRESS.md` is the short goal/now/milestone map; `worklog/YYYY-MM-DD.md` holds detailed task evidence. Relevant links, not dates, connect sessions. One protocol and two skills serve Cursor, Codex and CodeBuddy; no separate handoff artifact.
+`agentic-protocol` is a lightweight goal-directed work-memory plugin. `PROGRESS.md` is the short goal/now/milestone map; `worklog/YYYY-MM-DD.md` holds detailed task evidence. Relevant links, not dates, connect sessions. One protocol and two skills serve Cursor, Codex and CodeBuddy; no separate handoff artifact.
 
 ## Tech Stack
 - Language: Markdown rules/skills, JSON manifests, Python hook logic, Bash entry points, Node.js validation
@@ -10,20 +10,20 @@
 - Test framework: `scripts/validate-template.mjs` (structure, host-drift, always-on size review lines) + `scripts/test-hooks.py` (hook behaviour, stdlib `unittest`)
 
 ## Directory Structure
-- `plugins/agent-context/` — the single plugin package, installed to any of the three hosts.
-- `plugins/agent-context/rules/` — canonical operating protocol (also the source Codex injects at session start).
-- `plugins/agent-context/skills/` — host-neutral skills, shared verbatim by every host.
-- `plugins/agent-context/hooks/` — per-host hook configs plus the shared hook implementation.
+- `plugins/agentic-protocol/` — the single plugin package, installed to any of the three hosts.
+- `plugins/agentic-protocol/rules/` — canonical operating protocol (also the source Codex injects at session start).
+- `plugins/agentic-protocol/skills/` — host-neutral skills, shared verbatim by every host.
+- `plugins/agentic-protocol/hooks/` — per-host hook configs plus the shared hook implementation.
 - `.cursor-plugin/marketplace.json` — Cursor marketplace index.
 - `.agents/plugins/marketplace.json` — Codex marketplace index.
 - `.codebuddy-plugin/marketplace.json` — CodeBuddy marketplace index.
 - `scripts/` — install and validation utilities.
 
 ## Entry Points
-- `plugins/agent-context/.cursor-plugin/plugin.json` — Cursor manifest (declares `rules/`, `skills/`, `hooks/hooks.json`).
-- `plugins/agent-context/.codex-plugin/plugin.json` — Codex manifest (declares `skills/`, `hooks/codex-hooks.json`; Codex has no rules slot).
-- `plugins/agent-context/.codebuddy-plugin/plugin.json` — CodeBuddy manifest (declares `skills/`, `hooks/codebuddy-hooks.json`; `rules/` is auto-discovered, no schema field).
-- `plugins/agent-context/rules/agent-context-core.mdc` — the protocol, single source of truth.
+- `plugins/agentic-protocol/.cursor-plugin/plugin.json` — Cursor manifest (declares `rules/`, `skills/`, `hooks/hooks.json`).
+- `plugins/agentic-protocol/.codex-plugin/plugin.json` — Codex manifest (declares `skills/`, `hooks/codex-hooks.json`; Codex has no rules slot).
+- `plugins/agentic-protocol/.codebuddy-plugin/plugin.json` — CodeBuddy manifest (declares `skills/`, `hooks/codebuddy-hooks.json`; `rules/` is auto-discovered, no schema field).
+- `plugins/agentic-protocol/rules/agentic-protocol-core.mdc` — the protocol, single source of truth.
 - `scripts/install-local.sh [cursor|codex|codebuddy|all]` — local install.
 - `node scripts/validate-template.mjs` — validation.
 
@@ -32,10 +32,10 @@ _Verified against: worktree based on `11823a4`, 2026-09-17. This review covers `
 
 | Module | Responsibility | Boundary |
 |--------|----------------|----------|
-| `rules/agent-context-core.mdc` | The operating protocol: startup, goal alignment, execution, efficiency, evidence, response style, project memory | Only canonical copy. Cursor and CodeBuddy load it as an always-applied rule; the Codex hook reads and injects it. Nothing else may restate it. Size is a review signal, not a cap: the validator warns past 4200 chars and warns more strongly past 6000. |
+| `rules/agentic-protocol-core.mdc` | The operating protocol: startup, goal alignment, execution, efficiency, evidence, response style, project memory | Only canonical copy. Cursor and CodeBuddy load it as an always-applied rule; the Codex hook reads and injects it. Nothing else may restate it. Size is a review signal, not a cap: the validator warns past 4200 chars and warns more strongly past 6000. |
 | `skills/*/SKILL.md` | Two workflows: `bootstrap-context` owns knowledge files (structure, commands, config, conventions, decisions); `update-progress` owns state (`PROGRESS.md` + `worklog/`) | `update-progress` owns PROGRESS/worklog templates, task-link navigation and lossless legacy migration. Knowledge refresh is incremental, never a rewrite. No sync skill (`sync-context` retired 2026-09-19), no daily rollover or handoff skill; shared content stays host-neutral. |
 | `hooks/scripts/hook_payload.py` | Parse a host hook payload; resolve the project directory; name which hosts use Claude I/O and which inject the protocol | Knows each host's field precedence. No product logic. |
-| `hooks/scripts/session-context.py` | Deliver the protocol body for Codex only (no work-record injection) | Reads `rules/agent-context-core.mdc` minus frontmatter. Cursor and CodeBuddy load the rule through `rules/`, so the hook does nothing for them. No reads of `.agent-context/`, no writes, no migration. Fails open. |
+| `hooks/scripts/session-context.py` | Deliver the protocol body for Codex only (no work-record injection) | Reads `rules/agentic-protocol-core.mdc` minus frontmatter. Cursor and CodeBuddy load the rule through `rules/`, so the hook does nothing for them. No reads of `.agent-context/`, no writes, no migration. Fails open. |
 | `hooks/hooks.json` / `hooks/codex-hooks.json` / `hooks/codebuddy-hooks.json` | Per-host hook wiring | Separate files: Cursor uses camelCase events and a flat command; Codex and CodeBuddy use PascalCase nested Claude-style hooks. |
 | `scripts/validate-template.mjs` | Structure validation for every host, release-version consistency, and always-applied rule budget | Compares each plugin's host manifests and optional marketplace entry versions, not marketplace metadata versions. Fails past the 6000-character whole-file host injection limit; 5700 and the 4200 body clause-audit line only warn. |
 | `scripts/install-local.sh` | Copy one plugin to the selected host and activate where supported | Shared stdlib copy excludes generated bytecode/cache files; source and unrelated plugins stay untouched. |

@@ -1,6 +1,6 @@
 {
-  "name": "agent-context",
-  "displayName": "Agent Context",
+  "name": "agentic-protocol",
+  "displayName": "Agentic Protocol",
   "version": "0.2.0",
   "description": "Goal-directed project memory: a short goal/state map and dated work logs loaded on demand. No index, database or MCP server.",
   "author": {

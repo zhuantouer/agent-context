@@ -1,5 +1,5 @@
 {
-  "name": "agent-context",
+  "name": "agentic-protocol",
   "version": "0.2.0",
   "description": "Goal-directed project memory: a short goal/state map and dated work logs loaded on demand. No index, database or MCP server.",
   "author": {
@@ -22,7 +22,7 @@
     "markdown",
     "zero-dependency"
   ],
-  "homepage": "https://github.com/thanezh/agent-context",
+  "homepage": "https://github.com/thanezh/agentic-protocol",
   "category": "Productivity",
   "skills": [
     "./skills/bootstrap-context/SKILL.md",

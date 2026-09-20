@@ -15,10 +15,10 @@ from contextlib import redirect_stdout
 from unittest.mock import patch
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
-PLUGIN = REPO_ROOT / "plugins" / "agent-context"
+PLUGIN = REPO_ROOT / "plugins" / "agentic-protocol"
 SCRIPTS = PLUGIN / "hooks" / "scripts"
 PROGRESS_SKILL = PLUGIN / "skills" / "update-progress" / "SKILL.md"
-RULE = PLUGIN / "rules" / "agent-context-core.mdc"
+RULE = PLUGIN / "rules" / "agentic-protocol-core.mdc"
 HOSTS = ("cursor", "codex", "codebuddy")
 
 # The agent reads PROGRESS.md itself, so these headings are a linking and resume
@@ -235,7 +235,7 @@ class PackagingContracts(ProjectCase):
         for directory in ("plugins", ".cursor-plugin", ".codebuddy-plugin", ".agents"):
             shutil.copytree(REPO_ROOT / directory, self.project / directory,
                             ignore=shutil.ignore_patterns("__pycache__"))
-        self.package = self.project / "plugins" / "agent-context"
+        self.package = self.project / "plugins" / "agentic-protocol"
         self.marketplaces = [self.project / host / "marketplace.json"
                              for host in (".cursor-plugin", ".codebuddy-plugin", ".agents/plugins")]
 
@@ -298,7 +298,7 @@ class PackagingContracts(ProjectCase):
 
     def write_rule(self, total_chars, always_applied=True):
         """Rewrite the canonical rule to an exact whole-file character count."""
-        path = self.package / "rules" / "agent-context-core.mdc"
+        path = self.package / "rules" / "agentic-protocol-core.mdc"
         original = path.read_text(encoding="utf-8")
         head = original[:original.index("---", 3) + 3]
         if not always_applied:
@@ -357,13 +357,13 @@ class PackagingContracts(ProjectCase):
             env=dict(os.environ, HOME=str(home)), capture_output=True, text=True, timeout=30,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        installed = home / ".cursor/plugins/local/agent-context"
+        installed = home / ".cursor/plugins/local/agentic-protocol"
         for name in generated:
             self.assertFalse((installed / name).exists(), name)
             self.assertEqual((self.package / name).read_text(), "generated fixture")
         self.assertFalse((installed / "hooks/scripts/__pycache__").exists())
         self.assertEqual(unrelated.read_text(), "keep")
-        for name in ("rules/agent-context-core.mdc", "hooks/scripts/session-context.py", "README.md"):
+        for name in ("rules/agentic-protocol-core.mdc", "hooks/scripts/session-context.py", "README.md"):
             self.assertEqual((installed / name).read_bytes(), (self.package / name).read_bytes())
 
 

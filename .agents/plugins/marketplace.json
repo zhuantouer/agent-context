@@ -1,14 +1,14 @@
 {
-  "name": "agent-context-marketplace",
+  "name": "agentic-protocol-marketplace",
   "interface": {
-    "displayName": "Agent Context"
+    "displayName": "Agentic Protocol"
   },
   "plugins": [
     {
-      "name": "agent-context",
+      "name": "agentic-protocol",
       "source": {
         "source": "local",
-        "path": "./plugins/agent-context"
+        "path": "./plugins/agentic-protocol"
       },
       "policy": {
         "installation": "AVAILABLE",

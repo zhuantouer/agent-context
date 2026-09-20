@@ -216,7 +216,7 @@ async function validateCodebuddyPlugin(pluginDir, pluginName) {
   }
 
   // A declared directory is not scanned recursively: 2026-09-18 host logs reported
-  // "Plugin agent-context: 0 skill(s)" for "skills": ["./skills/"], where each skill
+  // "Plugin agentic-protocol: 0 skill(s)" for "skills": ["./skills/"], where each skill
   // lives in its own subdirectory with SKILL.md. Declare each SKILL.md file instead;
   // a directory entry silently yields no skills in the host UI.
   if (manifest.skills !== undefined) {
@@ -516,14 +516,14 @@ async function validatePlugin(pluginDir, pluginName) {
 }
 
 async function main() {
-  console.log("Validating agent-context plugin structure...\n");
+  console.log("Validating agentic-protocol plugin structure...\n");
 
   for (const marketplace of MARKETPLACES) {
     await validateMarketplace(marketplace);
   }
 
   // Check for logo
-  const logoPath = path.join(repoRoot, "plugins", "agent-context", "assets", "logo.svg");
+  const logoPath = path.join(repoRoot, "plugins", "agentic-protocol", "assets", "logo.svg");
   if (!(await pathExists(logoPath))) {
     addWarning("assets/logo.svg not found (referenced in plugin.json)");
   }

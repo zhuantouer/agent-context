@@ -28,7 +28,7 @@ from hook_payload import (  # noqa: E402
 )
 
 PLUGIN_ROOT = pathlib.Path(__file__).resolve().parents[2]
-PROTOCOL_PATH = PLUGIN_ROOT / "rules" / "agent-context-core.mdc"
+PROTOCOL_PATH = PLUGIN_ROOT / "rules" / "agentic-protocol-core.mdc"
 
 
 def read_protocol():

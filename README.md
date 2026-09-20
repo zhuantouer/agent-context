@@ -1,12 +1,12 @@
-# agent-context
+# agentic-protocol
 
-**Keep the goal, the conclusions, and the work that led there.** `agent-context` gives AI-assisted projects a durable work record in plain Markdown, shared by [Cursor](https://cursor.com/cn/docs/plugins), Codex, and [CodeBuddy](https://www.codebuddy.cn/docs/cli/plugins).
+**Keep the goal, the conclusions, and the work that led there.** `agentic-protocol` gives AI-assisted projects a durable work record in plain Markdown, shared by [Cursor](https://cursor.com/cn/docs/plugins), Codex, and [CodeBuddy](https://www.codebuddy.cn/docs/cli/plugins).
 
 One protocol, two skills, and lightweight Python-standard-library hooks. No index, database, daemon or MCP server. The agent maintains `.agent-context/PROGRESS.md`; new sessions read its current sections directly. There is no separate handoff to prepare or keep in sync.
 
 ## What it solves
 
-| Pain point | How agent-context fixes it |
+| Pain point | How agentic-protocol fixes it |
 |------------|---------------------------|
 | API keys / config forgotten mid-session | `.agent-context/CONFIG.md` persists key locations, loaded on demand; never secret values |
 | Agent re-reads the entire codebase every time | `.agent-context/ARCHITECTURE.md` gives a project map |
@@ -33,7 +33,7 @@ The agent keeps a short state map, dated evidence logs and only useful supportin
 └── MEMORY.md         ← reusable lessons and decision rationale
 ```
 
-`PROGRESS.md` answers “where are we now?”; daily logs explain “what happened and why?”. At the start of a session the agent reads `Objective`, optional `Constraints`, `Current State` and optional `Next Check` from `PROGRESS.md` itself, including a few task-relevant links. `Milestones` summarizes coarse outcomes, not every day or task. Neither logs nor milestones are automatically loaded; there is no full log index in PROGRESS. The [update-progress templates](plugins/agent-context/skills/update-progress/SKILL.md) define both formats.
+`PROGRESS.md` answers “where are we now?”; daily logs explain “what happened and why?”. At the start of a session the agent reads `Objective`, optional `Constraints`, `Current State` and optional `Next Check` from `PROGRESS.md` itself, including a few task-relevant links. `Milestones` summarizes coarse outcomes, not every day or task. Neither logs nor milestones are automatically loaded; there is no full log index in PROGRESS. The [update-progress templates](plugins/agentic-protocol/skills/update-progress/SKILL.md) define both formats.
 
 For example, a record can say: the goal is shorter query latency; the current conclusion is that A meets the latency limit but recall is unmeasured; the next check measures recall and determines whether to select A; the dated log explains which experiment established the latency result. This is useful working knowledge, not an extra handoff ritual.
 
@@ -51,7 +51,7 @@ This is not an approval gate for every action. Routine steps remain autonomous; 
 
 Execution efficiency is part of that goal: before costly work or a long wait, look for unnecessary serialization, repeated computation and valid reusable results. Implement safe in-scope improvements without waiting for the user to notice, while preserving outputs, coverage and resource limits. Avoid replacing waiting with an open-ended optimization project.
 
-See the [behavior acceptance scenarios](plugins/agent-context/README.md#behavior-acceptance), including the [lossless-efficiency replay](plugins/agent-context/README.md#lossless-efficiency-replay), for both progress and restraint checks. Preserving goal text is automatically tested; proactive judgment and actual savings still need live-session validation.
+See the [behavior acceptance scenarios](plugins/agentic-protocol/README.md#behavior-acceptance), including the [lossless-efficiency replay](plugins/agentic-protocol/README.md#lossless-efficiency-replay), for both progress and restraint checks. Preserving goal text is automatically tested; proactive judgment and actual savings still need live-session validation.
 
 ## How to know it's working
 
@@ -69,8 +69,8 @@ You should notice practical changes in agent behavior:
 ### Option A: Local plugin (recommended for development)
 
 ```bash
-git clone https://github.com/yourusername/agent-context.git ~/workspace/agent-context
-cd ~/workspace/agent-context
+git clone https://github.com/yourusername/agentic-protocol.git ~/workspace/agentic-protocol
+cd ~/workspace/agentic-protocol
 ./scripts/install-local.sh          # Cursor (default)
 ./scripts/install-local.sh codebuddy
 ./scripts/install-local.sh all      # Cursor + Codex + CodeBuddy
@@ -78,16 +78,16 @@ cd ~/workspace/agent-context
 
 **Cursor:** copies into `~/.cursor/plugins/local/`. Cursor **rejects symlinks** to paths outside that directory (`0 plugins loaded` in Cursor Plugins log). Re-run after editing, then **Developer: Reload Window**. Verify under **Settings → Plugins → Installed**.
 
-**CodeBuddy:** copies into `~/.codebuddy/plugins/` and, if the `codebuddy` CLI is on `PATH`, adds this repo as a marketplace and installs `agent-context@agent-context-marketplace`. Otherwise add the repo from **Settings → Plugins**, or test with `codebuddy --plugin-dir ./plugins/agent-context`. Then `/reload-plugins`. The protocol comes from the plugin's `rules/`; no session hook is needed.
+**CodeBuddy:** copies into `~/.codebuddy/plugins/` and, if the `codebuddy` CLI is on `PATH`, adds this repo as a marketplace and installs `agentic-protocol@agentic-protocol-marketplace`. Otherwise add the repo from **Settings → Plugins**, or test with `codebuddy --plugin-dir ./plugins/agentic-protocol`. Then `/reload-plugins`. The protocol comes from the plugin's `rules/`; no session hook is needed.
 
-**Codex:** copies into `~/.codex/plugins/` and runs `codex plugin add agent-context@personal`. Restart Codex and trust plugin hooks; Codex has no `rules/` slot, so without trust there is no protocol injection.
+**Codex:** copies into `~/.codex/plugins/` and runs `codex plugin add agentic-protocol@personal`. Restart Codex and trust plugin hooks; Codex has no `rules/` slot, so without trust there is no protocol injection.
 
 ### Option B: Local marketplace
 
-Add this repository as a local marketplace (`.cursor-plugin/marketplace.json` at repo root), then install `agent-context` from the marketplace UI or:
+Add this repository as a local marketplace (`.cursor-plugin/marketplace.json` at repo root), then install `agentic-protocol` from the marketplace UI or:
 
 ```
-/add-plugin agent-context
+/add-plugin agentic-protocol
 ```
 
 ### Option C: Cursor Marketplace
@@ -95,7 +95,7 @@ Add this repository as a local marketplace (`.cursor-plugin/marketplace.json` at
 After publishing via [cursor.com/marketplace/publish](https://cursor.com/marketplace/publish):
 
 ```
-/add-plugin agent-context
+/add-plugin agentic-protocol
 ```
 
 ## Skills
@@ -111,7 +111,7 @@ Skills follow the [Agent Skills](https://cursor.com/cn/docs/skills) format (`ski
 
 | Rule | Scope | Description |
 |------|-------|-------------|
-| `agent-context-core.mdc` | `alwaysApply: true` | Minimal operating protocol — recovery order, canonical file ownership, safety checks, and memory hygiene |
+| `agentic-protocol-core.mdc` | `alwaysApply: true` | Minimal operating protocol — recovery order, canonical file ownership, safety checks, and memory hygiene |
 
 See [Cursor Rules docs](https://cursor.com/cn/docs/rules) for how `alwaysApply` rules are injected into every session.
 
@@ -122,6 +122,8 @@ See [Cursor Rules docs](https://cursor.com/cn/docs/rules) for how `alwaysApply` 
 ## Upgrading older projects
 
 Update the plugin and reload the host first. Old progress files and `HANDOFF.md` remain readable; `Current State` still identifies authoritative current state, so dated logs do not require a new recovery format. On a substantive update or explicit migration, `update-progress` moves embedded history to dated logs, verifies preserved entries and links, then replaces detail with coarse milestones. Keep original dates; ambiguous dates/ranges remain labelled in an import section, not falsely attributed to today. Existing daily entries must not be overwritten or duplicated.
+
+The plugin was renamed from `agent-context` to `agentic-protocol`. The project record directory keeps its name, so `.agent-context/` needs no migration. After reinstalling, delete the stale `agent-context` copies under `~/.cursor/plugins/local/`, `~/.codex/plugins/` and `~/.codebuddy/plugins/` if a host still lists them; the Codex installer drops the old marketplace entry on its own.
 
 No hook or installer edits project records. Legacy files can remain untouched; delete one only after its useful content is preserved and cleanup is authorized. The handoff skill is retired. Older plugin versions do not recover the unified record, so downgrading is not a reason to maintain duplicate state.
 
@@ -146,7 +148,7 @@ Cursor, Codex, and CodeBuddy work today. Claude Code, OpenCode, and Pi do not ye
 | **OpenCode** | Thin JS/TS plugin in `opencode.json`. Deliver the protocol via `experimental.chat.messages.transform`, register `skills/` via the `config` hook (same pattern as [Superpowers for OpenCode](https://github.com/obra/superpowers/blob/main/docs/README.opencode.md)). Spawn the existing Python hooks instead of rewriting them. |
 | **Pi** | A pi package (`pi.skills` + `pi.extensions`). Deliver the protocol on `before_agent_start`, advisory nudge on `agent_settled`. Again: call the Python hooks; don't fork the protocol. |
 
-**Invariants for any host PR:** one canonical `rules/agent-context-core.mdc` (every host reads it; none restate it); the work record is read by the agent, never injected; skills stay host-neutral; if a host adds a Stop/settled nudge it stays advisory (no forced continuation) — no host registers one today.
+**Invariants for any host PR:** one canonical `rules/agentic-protocol-core.mdc` (every host reads it; none restate it); the work record is read by the agent, never injected; skills stay host-neutral; if a host adds a Stop/settled nudge it stays advisory (no forced continuation) — no host registers one today.
 
 ## Philosophy
 

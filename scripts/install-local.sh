@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install agent-context locally for testing.
+# Install agentic-protocol locally for testing.
 #
 #   ./scripts/install-local.sh [cursor|codex|codebuddy|all]   (default: cursor)
 #
@@ -10,14 +10,16 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PLUGIN_SRC="${REPO_ROOT}/plugins/agent-context"
-PLUGIN_NAME="agent-context"
+PLUGIN_SRC="${REPO_ROOT}/plugins/agentic-protocol"
+PLUGIN_NAME="agentic-protocol"
 # Personal marketplace entries are resolved relative to $HOME.
 CODEX_MARKETPLACE="${HOME}/.agents/plugins/marketplace.json"
 CODEX_SOURCE_PATH="./.codex/plugins/${PLUGIN_NAME}"
-# Name used before the Cursor and Codex packages were merged.
-LEGACY_CODEX_NAME="agent-context-codex"
-CODEBUDDY_MARKETPLACE_NAME="agent-context-marketplace"
+# Names this plugin shipped under before: the pre-merge Cursor/Codex package and
+# the pre-rename plugin id. A reinstall drops those marketplace entries so the
+# renamed plugin does not sit next to a stale copy.
+LEGACY_PLUGIN_NAMES="agent-context agent-context-codex"
+CODEBUDDY_MARKETPLACE_NAME="agentic-protocol-marketplace"
 
 copy_plugin() {
   local dest="$1"
@@ -39,14 +41,14 @@ install_cursor() {
   copy_plugin "$dest"
   echo "Installed ${PLUGIN_NAME} for Cursor: ${dest}"
   echo "  Next: Developer → Reload Window"
-  echo "  Verify: Settings → Plugins → Installed (Agent Context)"
+  echo "  Verify: Settings → Plugins → Installed (Agentic Protocol)"
 }
 
 register_codex_marketplace() {
   MARKETPLACE_PATH="$CODEX_MARKETPLACE" \
   PLUGIN_NAME="$PLUGIN_NAME" \
   SOURCE_PATH="$CODEX_SOURCE_PATH" \
-  LEGACY_NAME="$LEGACY_CODEX_NAME" \
+  LEGACY_NAMES="$LEGACY_PLUGIN_NAMES" \
   python3 - <<'PY'
 import json
 import os
@@ -54,7 +56,7 @@ import pathlib
 
 path = pathlib.Path(os.environ["MARKETPLACE_PATH"])
 name = os.environ["PLUGIN_NAME"]
-legacy = os.environ["LEGACY_NAME"]
+legacy = set(os.environ["LEGACY_NAMES"].split())
 
 data = {"name": "personal", "interface": {"displayName": "Personal"}, "plugins": []}
 if path.exists():
@@ -68,7 +70,7 @@ if path.exists():
 plugins = [
     entry
     for entry in data.get("plugins", [])
-    if isinstance(entry, dict) and entry.get("name") not in (name, legacy)
+    if isinstance(entry, dict) and entry.get("name") not in legacy | {name}
 ]
 dropped = len(data.get("plugins", [])) - len(plugins)
 plugins.append(
@@ -121,7 +123,7 @@ install_codex() {
   register_codex_marketplace
   activate_codex_plugin
   echo "  Next: restart Codex"
-  echo "  Verify: codex plugin list  (expect 'agent-context@personal  installed, enabled')"
+  echo "  Verify: codex plugin list  (expect 'agentic-protocol@personal  installed, enabled')"
   echo "  Codex asks you to trust plugin hooks before they run; without trust there is no protocol injection"
 }
 

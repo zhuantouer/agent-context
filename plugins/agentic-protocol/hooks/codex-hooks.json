@@ -1,5 +1,5 @@
 {
-  "description": "agent-context lifecycle hooks for Codex",
+  "description": "agentic-protocol lifecycle hooks for Codex",
   "hooks": {
     "SessionStart": [
       {

@@ -1,4 +1,4 @@
-# Agent Context
+# Agentic Protocol
 
 Goal-directed research and execution with a short state map and on-demand evidence. `.agent-context/PROGRESS.md` holds goals, current conclusions, coarse milestones and relevant links; `worklog/YYYY-MM-DD.md` preserves detailed work by task. No separate handoff, duplicate daily snapshot or mandatory daily file.
 
@@ -8,7 +8,7 @@ No index, no database, no MCP server: the hooks are Python standard library only
 
 | Type | Items |
 |------|-------|
-| Rules | `agent-context-core.mdc` (`alwaysApply: true`) |
+| Rules | `agentic-protocol-core.mdc` (`alwaysApply: true`) |
 | Skills | `bootstrap-context`, `update-progress` — build and maintain project knowledge, maintain the work record |
 | Hooks | `sessionStart` — Codex only, which has no rules slot, delivers the protocol |
 

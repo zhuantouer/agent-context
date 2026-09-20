@@ -1,6 +1,6 @@
 {
   "extraKnownMarketplaces": {
-    "agent-context-marketplace": {
+    "agentic-protocol-marketplace": {
       "source": {
         "source": "directory",
         "path": "."
@@ -8,6 +8,6 @@
     }
   },
   "enabledPlugins": {
-    "agent-context@agent-context-marketplace": true
+    "agentic-protocol@agentic-protocol-marketplace": true
   }
 }

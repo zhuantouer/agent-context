@@ -1,5 +1,5 @@
 {
-  "name": "agent-context-marketplace",
+  "name": "agentic-protocol-marketplace",
   "owner": {
     "name": "thanezh",
     "email": "thanezh@example.com"
@@ -10,8 +10,8 @@
   },
   "plugins": [
     {
-      "name": "agent-context",
-      "source": "./plugins/agent-context",
+      "name": "agentic-protocol",
+      "source": "./plugins/agentic-protocol",
       "description": "Auto-maintained objectives, conclusions, work history and project knowledge"
     }
   ]

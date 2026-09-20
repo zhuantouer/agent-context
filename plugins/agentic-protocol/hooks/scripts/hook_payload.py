@@ -12,7 +12,7 @@ import sys
 HOSTS = ("cursor", "codex", "codebuddy")
 
 # Codex has no always-applied rules slot, so SessionStart injects the protocol.
-# Cursor and CodeBuddy load rules/agent-context-core.mdc themselves.
+# Cursor and CodeBuddy load rules/agentic-protocol-core.mdc themselves.
 INJECT_PROTOCOL_HOSTS = frozenset({"codex"})
 
 
