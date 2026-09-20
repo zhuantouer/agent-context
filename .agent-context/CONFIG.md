@@ -7,11 +7,10 @@
 (none detected)
 
 ## External Services
-- Cursor Plugins — target runtime for plugin installation and execution.
-- Cursor Marketplace — future distribution path referenced by README.
+- Cursor Plugins — target runtime for plugin installation and execution. No marketplace distribution: installation is `./scripts/install-local.sh` only.
 
 ## Local Setup
-Local plugin testing copies `plugins/agent-context` into `~/.cursor/plugins/local/` via `./scripts/install-local.sh`. Do not symlink from outside that directory because Cursor rejects external symlinks.
+Local plugin testing copies `plugin` into `~/.cursor/plugins/local/` via `./scripts/install-local.sh`. Do not symlink from outside that directory because Cursor rejects external symlinks.
 # Project Configuration
 
 ## Environment Variables
@@ -21,9 +20,9 @@ No required environment variables detected.
 No API keys detected. Do not store secret values in this repository or in `.agent-context/`.
 
 ## External Services
-- Cursor plugin runtime and local marketplace.
+- Cursor plugin runtime. No marketplace distribution.
 
 ## Local Setup
-- Edit plugin files under `plugins/agent-context/`.
+- Edit plugin files under `plugin/`.
 - Validate with `node scripts/validate-template.mjs`.
 - Install locally with `./scripts/install-local.sh`, then reload Cursor.

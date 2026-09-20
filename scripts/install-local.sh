@@ -10,7 +10,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PLUGIN_SRC="${REPO_ROOT}/plugins/agentic-protocol"
+PLUGIN_SRC="${REPO_ROOT}/plugin"
 PLUGIN_NAME="agentic-protocol"
 # Personal marketplace entries are resolved relative to $HOME.
 CODEX_MARKETPLACE="${HOME}/.agents/plugins/marketplace.json"
@@ -20,6 +20,12 @@ CODEX_SOURCE_PATH="./.codex/plugins/${PLUGIN_NAME}"
 # renamed plugin does not sit next to a stale copy.
 LEGACY_PLUGIN_NAMES="agent-context agent-context-codex"
 CODEBUDDY_MARKETPLACE_NAME="agentic-protocol-marketplace"
+# A directory marketplace is referenced in place (installLocation = source path),
+# so the manifest must live outside the repository and point at the installed
+# copy under ~/.codebuddy/plugins/ — pointing it at the repo makes CodeBuddy
+# load the rule from the source tree, and reinstalling never reaches the host.
+CODEBUDDY_MARKETPLACE_DIR="${HOME}/.codebuddy/plugin-marketplaces/${CODEBUDDY_MARKETPLACE_NAME}"
+LEGACY_CODEBUDDY_MARKETPLACES="agent-context-marketplace"
 
 copy_plugin() {
   local dest="$1"
@@ -135,17 +141,63 @@ codebuddy_cli() {
   return 1
 }
 
-# CodeBuddy, like Codex, loads a versioned cache snapshot rather than the
-# marketplace source. `plugin install` re-materializes even when the version is
-# unchanged, so run it always. `--plugin-dir` is the no-CLI fallback.
+# CodeBuddy, like Codex, installs through a marketplace, but a directory
+# marketplace is used in place rather than cloned. Serve the installed copy
+# from a manifest under ~/.codebuddy/plugin-marketplaces/ so the host loads
+# ~/.codebuddy/plugins/<name>, never this repository.
+write_codebuddy_marketplace() {
+  MARKETPLACE_DIR="$CODEBUDDY_MARKETPLACE_DIR" \
+  MARKETPLACE_NAME="$CODEBUDDY_MARKETPLACE_NAME" \
+  PLUGIN_NAME="$PLUGIN_NAME" \
+  PLUGIN_SRC="$PLUGIN_SRC" \
+  python3 - <<'PY'
+import json
+import os
+import pathlib
+
+plugin = json.loads(
+    pathlib.Path(os.environ["PLUGIN_SRC"], ".codebuddy-plugin", "plugin.json").read_text(encoding="utf-8")
+)
+data = {
+    "name": os.environ["MARKETPLACE_NAME"],
+    "owner": {"name": "local"},
+    "metadata": {
+        "description": "Local marketplace serving the installed copy of " + os.environ["PLUGIN_NAME"],
+        "version": plugin["version"],
+    },
+    "plugins": [
+        {
+            "name": os.environ["PLUGIN_NAME"],
+            # Relative to the marketplace directory; ../.. is ~/.codebuddy.
+            "source": "../../plugins/" + os.environ["PLUGIN_NAME"],
+            "description": plugin["description"],
+            "version": plugin["version"],
+            "category": "Productivity",
+        }
+    ],
+}
+root = pathlib.Path(os.environ["MARKETPLACE_DIR"], ".codebuddy-plugin")
+root.mkdir(parents=True, exist_ok=True)
+path = root / "marketplace.json"
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+print(f"  Local marketplace manifest written: {path}")
+PY
+}
+
+# `plugin install` re-materializes even when the version is unchanged, so run
+# it always. `--plugin-dir` is the no-CLI fallback.
 activate_codebuddy_plugin() {
   local cli
   if ! cli="$(codebuddy_cli)"; then
-    echo "  codebuddy CLI not found; in CodeBuddy IDE add this repo as a marketplace" >&2
-    echo "  (Settings → Plugins) or run: codebuddy --plugin-dir ${PLUGIN_SRC}" >&2
+    echo "  codebuddy CLI not found; run: codebuddy --plugin-dir ${PLUGIN_SRC}" >&2
     return 0
   fi
-  "$cli" plugin marketplace add "${REPO_ROOT}" 2>&1 | sed 's/^/  /' || true
+  local legacy
+  for legacy in $LEGACY_CODEBUDDY_MARKETPLACES; do
+    "$cli" plugin marketplace rm "$legacy" >/dev/null 2>&1 || true
+  done
+  "$cli" plugin marketplace rm "$CODEBUDDY_MARKETPLACE_NAME" >/dev/null 2>&1 || true
+  "$cli" plugin marketplace add "$CODEBUDDY_MARKETPLACE_DIR" 2>&1 | sed 's/^/  /' || true
   "$cli" plugin install "${PLUGIN_NAME}@${CODEBUDDY_MARKETPLACE_NAME}" --scope user 2>&1 | sed 's/^/  /' || true
 }
 
@@ -153,6 +205,7 @@ install_codebuddy() {
   local dest="${HOME}/.codebuddy/plugins/${PLUGIN_NAME}"
   copy_plugin "$dest"
   echo "Installed ${PLUGIN_NAME} for CodeBuddy: ${dest}"
+  write_codebuddy_marketplace
   activate_codebuddy_plugin
   echo "  Next: /reload-plugins in CodeBuddy, or restart CodeBuddy IDE"
   echo "  Verify: /plugin (Installed tab) or: codebuddy --plugin-dir ${dest}"

@@ -33,7 +33,7 @@ The agent keeps a short state map, dated evidence logs and only useful supportin
 └── MEMORY.md         ← reusable lessons and decision rationale
 ```
 
-`PROGRESS.md` answers “where are we now?”; daily logs explain “what happened and why?”. At the start of a session the agent reads `Objective`, optional `Constraints`, `Current State` and optional `Next Check` from `PROGRESS.md` itself, including a few task-relevant links. `Milestones` summarizes coarse outcomes, not every day or task. Neither logs nor milestones are automatically loaded; there is no full log index in PROGRESS. The [update-progress templates](plugins/agentic-protocol/skills/update-progress/SKILL.md) define both formats.
+`PROGRESS.md` answers “where are we now?”; daily logs explain “what happened and why?”. At the start of a session the agent reads `Objective`, optional `Constraints`, `Current State` and optional `Next Check` from `PROGRESS.md` itself, including a few task-relevant links. `Milestones` summarizes coarse outcomes, not every day or task. Neither logs nor milestones are automatically loaded; there is no full log index in PROGRESS. The [update-progress templates](plugin/skills/update-progress/SKILL.md) define both formats.
 
 For example, a record can say: the goal is shorter query latency; the current conclusion is that A meets the latency limit but recall is unmeasured; the next check measures recall and determines whether to select A; the dated log explains which experiment established the latency result. This is useful working knowledge, not an extra handoff ritual.
 
@@ -51,7 +51,7 @@ This is not an approval gate for every action. Routine steps remain autonomous; 
 
 Execution efficiency is part of that goal: before costly work or a long wait, look for unnecessary serialization, repeated computation and valid reusable results. Implement safe in-scope improvements without waiting for the user to notice, while preserving outputs, coverage and resource limits. Avoid replacing waiting with an open-ended optimization project.
 
-See the [behavior acceptance scenarios](plugins/agentic-protocol/README.md#behavior-acceptance), including the [lossless-efficiency replay](plugins/agentic-protocol/README.md#lossless-efficiency-replay), for both progress and restraint checks. Preserving goal text is automatically tested; proactive judgment and actual savings still need live-session validation.
+See the [behavior acceptance scenarios](plugin/README.md#behavior-acceptance), including the [lossless-efficiency replay](plugin/README.md#lossless-efficiency-replay), for both progress and restraint checks. Preserving goal text is automatically tested; proactive judgment and actual savings still need live-session validation.
 
 ## How to know it's working
 
@@ -66,7 +66,7 @@ You should notice practical changes in agent behavior:
 
 ## Installation
 
-### Option A: Local plugin (recommended for development)
+Install with the script — it is the only supported path:
 
 ```bash
 git clone https://github.com/yourusername/agentic-protocol.git ~/workspace/agentic-protocol
@@ -78,25 +78,9 @@ cd ~/workspace/agentic-protocol
 
 **Cursor:** copies into `~/.cursor/plugins/local/`. Cursor **rejects symlinks** to paths outside that directory (`0 plugins loaded` in Cursor Plugins log). Re-run after editing, then **Developer: Reload Window**. Verify under **Settings → Plugins → Installed**.
 
-**CodeBuddy:** copies into `~/.codebuddy/plugins/` and, if the `codebuddy` CLI is on `PATH`, adds this repo as a marketplace and installs `agentic-protocol@agentic-protocol-marketplace`. Otherwise add the repo from **Settings → Plugins**, or test with `codebuddy --plugin-dir ./plugins/agentic-protocol`. Then `/reload-plugins`. The protocol comes from the plugin's `rules/`; no session hook is needed.
+**CodeBuddy:** copies into `~/.codebuddy/plugins/` and, if the `codebuddy` CLI is on `PATH`, registers a local marketplace under `~/.codebuddy/plugin-marketplaces/` that serves the installed copy, then installs `agentic-protocol@agentic-protocol-marketplace`. The marketplace must not point at this repository — a directory marketplace is used in place, so CodeBuddy would otherwise load the rule from the source tree. Otherwise test with `codebuddy --plugin-dir ./plugin`. Then `/reload-plugins`. The protocol comes from the plugin's `rules/`; no session hook is needed.
 
 **Codex:** copies into `~/.codex/plugins/` and runs `codex plugin add agentic-protocol@personal`. Restart Codex and trust plugin hooks; Codex has no `rules/` slot, so without trust there is no protocol injection.
-
-### Option B: Local marketplace
-
-Add this repository as a local marketplace (`.cursor-plugin/marketplace.json` at repo root), then install `agentic-protocol` from the marketplace UI or:
-
-```
-/add-plugin agentic-protocol
-```
-
-### Option C: Cursor Marketplace
-
-After publishing via [cursor.com/marketplace/publish](https://cursor.com/marketplace/publish):
-
-```
-/add-plugin agentic-protocol
-```
 
 ## Skills
 
@@ -152,7 +136,7 @@ Cursor, Codex, and CodeBuddy work today. Claude Code, OpenCode, and Pi do not ye
 
 ## Philosophy
 
-Inspired by AgenticMetaEngineering (Tencent-internal, by r***hou) and [Superpowers](https://github.com/obra/superpowers), but **radically simplified**:
+Inspired by AgenticMetaEngineering (Tencent-internal, by r***hou), [Superpowers](https://github.com/obra/superpowers) and [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills), but **radically simplified**:
 
 - **No 8-stage workflow.** No gate audits. No mandatory worktrees.
 - **No 20+ plugins.** One plugin, one rule file, two skills.

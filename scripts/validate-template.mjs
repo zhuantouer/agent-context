@@ -79,9 +79,15 @@ async function readJSON(filePath) {
   }
 }
 
+// The repository ships one plugin package and no marketplace index: installation
+// goes through scripts/install-local.sh, which copies this directory into each
+// host's own plugin tree. Marketplace publishing is deliberately not supported.
+const PLUGIN_DIR_NAME = "plugin";
+const PLUGIN_NAME = "agentic-protocol";
+
 const pluginVersions = new Map();
 
-async function validateReleaseVersion(pluginDir, plugin, host) {
+async function validateReleaseVersion(pluginDir, pluginName, host) {
   const manifestPath = path.join(pluginDir, `.${host}-plugin`, "plugin.json");
   const manifest = await readJSON(manifestPath);
   if (!manifest) return;
@@ -91,108 +97,11 @@ async function validateReleaseVersion(pluginDir, plugin, host) {
     addError(`${source}: plugin version must be a non-empty string`);
     return;
   }
-  const expected = pluginVersions.get(plugin.name);
+  const expected = pluginVersions.get(pluginName);
   if (expected && version !== expected.version) {
-    addError(`Plugin '${plugin.name}' version mismatch: ${source} has ${version}; ${expected.source} has ${expected.version}`);
+    addError(`Plugin '${pluginName}' version mismatch: ${source} has ${version}; ${expected.source} has ${expected.version}`);
   } else if (!expected) {
-    pluginVersions.set(plugin.name, { version, source });
-  }
-  if (plugin.version !== undefined && plugin.version !== version) {
-    addError(`Plugin '${plugin.name}' version mismatch: ${host} marketplace entry has ${JSON.stringify(plugin.version)}; ${source} has ${version}`);
-  }
-}
-
-// One marketplace.json per host, all with the same skeleton: name, plugins array,
-// a source path per entry. Only four things differ, so they are data here rather
-// than three copies of the same loop. Adding a host means one row, not a rewrite.
-//
-//   requireRelative — Codex and CodeBuddy resolve the path against the marketplace
-//     root, so it must start with './'. Cursor accepts any resolvable path.
-//   required — extra fields beyond name/source (Codex: policy + category, because
-//     the desktop UI hides a plugin that is not installable; CodeBuddy: the
-//     marketplace card needs a description).
-//
-// Source shape is shared: Codex nests it under source.path, the other two use a
-// bare string. `source` is optional in the error text only because one host hides
-// it one level deeper.
-const MARKETPLACES = [
-  {
-    host: "cursor",
-    file: ".cursor-plugin/marketplace.json",
-    requireRelative: false,
-    required: [],
-    validate: validatePlugin,
-  },
-  {
-    host: "codex",
-    file: ".agents/plugins/marketplace.json",
-    requireRelative: true,
-    required: ["policy.installation", "policy.authentication", "category"],
-    validate: validateCodexPlugin,
-  },
-  {
-    host: "codebuddy",
-    file: ".codebuddy-plugin/marketplace.json",
-    requireRelative: true,
-    required: ["description"],
-    validate: validateCodebuddyPlugin,
-  },
-];
-
-function getPath(object, dotted) {
-  return dotted.split(".").reduce((node, key) => node?.[key], object);
-}
-
-async function validateMarketplace({ host, file, requireRelative, required, validate }) {
-  const marketplacePath = path.join(repoRoot, file);
-  const source = path.relative(repoRoot, marketplacePath);
-  if (!(await pathExists(marketplacePath))) {
-    addError(`${source} not found`);
-    return;
-  }
-
-  const marketplace = await readJSON(marketplacePath);
-  if (!marketplace) {
-    addError(`${source} is invalid JSON`);
-    return;
-  }
-  if (!marketplace.name) {
-    addError(`${source}: missing 'name'`);
-  }
-  if (!Array.isArray(marketplace.plugins)) {
-    addError(`${source}: missing or invalid 'plugins' array`);
-    return;
-  }
-
-  for (const plugin of marketplace.plugins) {
-    if (!plugin.name) {
-      addError(`${source}: plugin entry missing 'name'`);
-      continue;
-    }
-
-    const sourcePath = typeof plugin.source === "string" ? plugin.source : plugin.source?.path;
-    if (typeof sourcePath !== "string") {
-      addError(`${source}: plugin '${plugin.name}' missing 'source' (a path string, or an object with 'path')`);
-      continue;
-    }
-    if (requireRelative && !sourcePath.startsWith("./")) {
-      addError(`${source}: plugin '${plugin.name}' source must start with './'`);
-    }
-
-    const pluginDir = path.resolve(repoRoot, sourcePath);
-    if (!(await pathExists(pluginDir))) {
-      addError(`${source}: plugin '${plugin.name}' source path does not exist: ${sourcePath}`);
-      continue;
-    }
-
-    for (const field of required) {
-      if (!getPath(plugin, field)) {
-        addError(`${source}: plugin '${plugin.name}' missing '${field}'`);
-      }
-    }
-
-    await validate(pluginDir, plugin.name);
-    await validateReleaseVersion(pluginDir, plugin, host);
+    pluginVersions.set(pluginName, { version, source });
   }
 }
 
@@ -518,12 +427,20 @@ async function validatePlugin(pluginDir, pluginName) {
 async function main() {
   console.log("Validating agentic-protocol plugin structure...\n");
 
-  for (const marketplace of MARKETPLACES) {
-    await validateMarketplace(marketplace);
+  const pluginDir = path.join(repoRoot, PLUGIN_DIR_NAME);
+  if (!(await pathExists(pluginDir))) {
+    addError(`${PLUGIN_DIR_NAME}/ not found: the plugin package must sit at the repository root`);
+  } else {
+    await validatePlugin(pluginDir, PLUGIN_NAME);
+    await validateCodebuddyPlugin(pluginDir, PLUGIN_NAME);
+    await validateCodexPlugin(pluginDir, PLUGIN_NAME);
+    for (const host of ["cursor", "codebuddy", "codex"]) {
+      await validateReleaseVersion(pluginDir, PLUGIN_NAME, host);
+    }
   }
 
   // Check for logo
-  const logoPath = path.join(repoRoot, "plugins", "agentic-protocol", "assets", "logo.svg");
+  const logoPath = path.join(pluginDir, "assets", "logo.svg");
   if (!(await pathExists(logoPath))) {
     addWarning("assets/logo.svg not found (referenced in plugin.json)");
   }

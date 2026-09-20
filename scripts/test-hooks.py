@@ -15,7 +15,7 @@ from contextlib import redirect_stdout
 from unittest.mock import patch
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
-PLUGIN = REPO_ROOT / "plugins" / "agentic-protocol"
+PLUGIN = REPO_ROOT / "plugin"
 SCRIPTS = PLUGIN / "hooks" / "scripts"
 PROGRESS_SKILL = PLUGIN / "skills" / "update-progress" / "SKILL.md"
 RULE = PLUGIN / "rules" / "agentic-protocol-core.mdc"
@@ -232,12 +232,9 @@ class Contracts(ProjectCase):
 class PackagingContracts(ProjectCase):
     def setUp(self):
         super().setUp()
-        for directory in ("plugins", ".cursor-plugin", ".codebuddy-plugin", ".agents"):
-            shutil.copytree(REPO_ROOT / directory, self.project / directory,
-                            ignore=shutil.ignore_patterns("__pycache__"))
-        self.package = self.project / "plugins" / "agentic-protocol"
-        self.marketplaces = [self.project / host / "marketplace.json"
-                             for host in (".cursor-plugin", ".codebuddy-plugin", ".agents/plugins")]
+        shutil.copytree(REPO_ROOT / "plugin", self.project / "plugin",
+                        ignore=shutil.ignore_patterns("__pycache__"))
+        self.package = self.project / "plugin"
 
     def validate(self):
         if not shutil.which("node"):
@@ -248,13 +245,13 @@ class PackagingContracts(ProjectCase):
         )
         return result.returncode, result.stdout + result.stderr
 
-    def test_marketplace_metadata_version_is_independent(self):
-        for path in self.marketplaces:
-            data = json.loads(path.read_text())
-            data.setdefault("metadata", {})["version"] = "9.0.0"
-            path.write_text(json.dumps(data))
-        code, output = self.validate()
-        self.assertEqual(code, 0, output)
+    def test_repository_ships_one_plugin_package_and_no_marketplace_index(self):
+        # Installation goes through install-local.sh only; a marketplace index at
+        # the repository root is what made CodeBuddy load the rule from source.
+        self.assertTrue((REPO_ROOT / "plugin" / "rules" / "agentic-protocol-core.mdc").is_file())
+        self.assertFalse((REPO_ROOT / "plugins").exists())
+        for leftover in (".cursor-plugin", ".codebuddy-plugin", ".agents"):
+            self.assertFalse((REPO_ROOT / leftover).exists(), leftover)
 
     def test_rejects_each_host_manifest_version_drift(self):
         for host in HOSTS:
@@ -269,29 +266,11 @@ class PackagingContracts(ProjectCase):
                 self.assertIn("version mismatch", output.lower())
             path.write_text(original)
 
-    def test_rejects_marketplace_plugin_version_drift(self):
-        for path in self.marketplaces:
-            original = path.read_text()
-            with self.subTest(marketplace=path.parent.name):
-                data = json.loads(original)
-                data["plugins"][0]["version"] = "9.0.0"
-                path.write_text(json.dumps(data))
-                code, output = self.validate()
-                self.assertNotEqual(code, 0, output)
-                self.assertIn("version mismatch", output.lower())
-            path.write_text(original)
-
     def test_coordinated_plugin_version_change_passes(self):
         for host in HOSTS:
             path = self.package / f".{host}-plugin" / "plugin.json"
             data = json.loads(path.read_text())
             data["version"] = "0.2.1"
-            path.write_text(json.dumps(data))
-        for path in self.marketplaces:
-            data = json.loads(path.read_text())
-            for entry in data["plugins"]:
-                if "version" in entry:
-                    entry["version"] = "0.2.1"
             path.write_text(json.dumps(data))
         code, output = self.validate()
         self.assertEqual(code, 0, output)
