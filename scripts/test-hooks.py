@@ -346,6 +346,46 @@ class PackagingContracts(ProjectCase):
             self.assertEqual((installed / name).read_bytes(), (self.package / name).read_bytes())
 
 
+class VersionLockstep(unittest.TestCase):
+    """VERSION is the single source of truth; a hand-edited manifest must fail."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = pathlib.Path(self.tmp.name)
+        shutil.copytree(REPO_ROOT / "plugin", self.root / "plugin",
+                        ignore=shutil.ignore_patterns("__pycache__"))
+        shutil.copy(REPO_ROOT / "VERSION", self.root / "VERSION")
+
+    def bump(self, *args):
+        return subprocess.run(
+            [str(REPO_ROOT / "scripts" / "bump-version.sh"), *args, "--root", str(self.root)],
+            capture_output=True, text=True, timeout=30,
+        )
+
+    def test_shipped_repository_is_in_lockstep(self):
+        result = self.bump("--check")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_manifest_drift_fails_the_check(self):
+        manifest = self.root / "plugin" / ".codex-plugin" / "plugin.json"
+        data = json.loads(manifest.read_text())
+        data["version"] = "9.9.9"
+        manifest.write_text(json.dumps(data))
+        result = self.bump("--check")
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+        self.assertIn("9.9.9", result.stdout)
+
+    def test_bump_rewrites_version_and_every_manifest(self):
+        result = self.bump("3.1.4")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual((self.root / "VERSION").read_text().strip(), "3.1.4")
+        for host in HOSTS:
+            data = json.loads((self.root / "plugin" / f".{host}-plugin" / "plugin.json").read_text())
+            self.assertEqual(data["version"], "3.1.4", host)
+        self.assertEqual(self.bump("--check").returncode, 0)
+
+
 class HostDispatch(unittest.TestCase):
     def test_unknown_host_is_rejected(self):
         with self.assertRaises(SystemExit):

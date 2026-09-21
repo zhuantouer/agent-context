@@ -69,7 +69,7 @@ You should notice practical changes in agent behavior:
 Install with the script — it is the only supported path:
 
 ```bash
-git clone https://github.com/yourusername/agentic-protocol.git ~/workspace/agentic-protocol
+git clone https://github.com/zhuantouer/agentic-protocol.git ~/workspace/agentic-protocol
 cd ~/workspace/agentic-protocol
 ./scripts/install-local.sh          # Cursor (default)
 ./scripts/install-local.sh codebuddy
@@ -118,7 +118,12 @@ Validate plugin structure and hook behavior:
 ```bash
 node scripts/validate-template.mjs
 python3 scripts/test-hooks.py
+./scripts/bump-version.sh --check
 ```
+
+CI (`.github/workflows/ci.yml`) runs the same three commands on pushes to `main` and on pull requests.
+
+The shipped version lives in `VERSION`; `./scripts/bump-version.sh 2.0.2` writes it and all three host manifests at once. Do not hand-edit a manifest `version` — `--check` and CI fail on drift.
 
 Bootstrap avoids Unix-only scan commands in generated guidance. Prefer Cursor file tools, `rg`, or `git ls-files` so the workflow works across macOS, Linux, and Windows-style environments.
 
@@ -149,4 +154,4 @@ Optimize for useful work, not paperwork: keep one short state map, load dated ev
 
 ## License
 
-MIT
+[MIT](LICENSE)
