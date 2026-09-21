@@ -26,6 +26,12 @@ alwaysApply: true
 
 用户当前明确意图优先于任何历史记录；目标或方向变了就跟着变，不要抱着旧目标做完。制定的行动计划只需要做到下一个决策点（下一步要选方向的地方），不要一次排到任务结束。
 
+**方向变更即回写（强制）**："跟着变"包括**状态**，不只是行动。新问题**成为当前工作目标**（它驱动后续动作或用户确认继续）时，同一轮内覆盖式改写 `## Objective`：目标 + 验收标准 + **判定读数**（用哪个对比的哪个量判定）。切走的那条未结案的进 `## Other Goals`，已回答/已判负/明确放弃的进 `## Closed Questions`；**禁止新旧口径并列**——旧的那条会继续牵引判定。旁支提问（不驱动后续工作的）不改写，记进 worklog 或 `Deferred`。
+
+**切换 ≠ 结案**：其余目标线放 `## Other Goals`，标 `并行推进`/`暂停`/`等待前置` 与恢复条件（≤3 条）；只有 `## Objective` 那条是当前判定口径。
+
+**还原出的目标必须落到 `PROGRESS.md`**，不能只写进设计文档或代码注释。重新提起一个已结案的目标时，先说明"这条已结案"再决定是否做。
+
 投入较大调研或新增分支前，先明确这四项（派给 subagent 时同样要求）：
 
 1. 待解决的缺口或 hypothesis；
@@ -57,7 +63,9 @@ alwaysApply: true
 
 验证力度与风险相称（低风险不过度，高风险不省）：命令优先查 `COMMANDS.md`，缺失时回退项目自身的 CI、构建或包管理配置；无法执行的检查须如实报告，不得声称已跑过。
 
-每完成一个自洽、已验证、可工作的 milestone，建议一次范围清晰的 commit；仅在用户明确要求时提交。
+每完成一个自洽、已验证、可工作的 milestone，先读 `## Objective` 并回答一句"它是否仍描述当前目标"；不是就补做回锚再继续。**只更新 `Current State` / Milestones 而跳过 Objective 视为该 milestone 未完成。** 之后建议一次范围清晰的 commit；仅在用户明确要求时提交。
+
+每轮评审（含专家互评）必须含一条**目标检查**：该工作是否仍服务于 `## Objective`；只有实现正确性的评审要补这条，缺失即记为 finding。
 
 不得记录 secret 明文。
 
@@ -87,7 +95,7 @@ alwaysApply: true
 
 | File | Owns |
 |---|---|
-| `PROGRESS.md` | 状态地图：目标与成功标准、约束、当前任务/结论/缺口、next check、粗粒度 milestone 和相关链接；不是日志索引。 |
+| `PROGRESS.md` | 状态地图：目标与成功标准、约束、当前任务/结论/缺口、next check、粗粒度 milestone 和相关链接；不是日志索引。`## Objective` 是**活字段**：只放当前激活的目标线，只允许覆盖；带日期的演化史归 `worklog/` 与 Milestone。 |
 | `worklog/YYYY-MM-DD.md` | 按任务记录工作与结果、验证、失败的实验、决策证据（写入判据见 `update-progress`）；无代码改动也要记；不放状态快照。 |
 | `ARCHITECTURE.md` | 项目地图、entry point、模块边界、数据流、术语 |
 | `COMMANDS.md` | 脚本等命令、validation profile、慢或 flaky 注意事项、命令特有失败 |
@@ -95,4 +103,4 @@ alwaysApply: true
 | `CONVENTIONS.md` | 代码风格、工作流、偏好、边界、review 习惯 |
 | `MEMORY.md` | 决策及理由、经验教训、被证伪的假设、open question、bug 根因、可复用修复；重复内容合并，不留成对话记录 |
 
-写入或更新规则见 `update-progress`；知识类内容（结构、命令、配置、约定）变化时用 `bootstrap-context` 更新。一条事实只存一处，不得复制到多处。
+状态类写入（`PROGRESS.md` / `worklog/`）必须先加载 `update-progress` 并按其判据执行；知识类写入必须先加载 `bootstrap-context`。**不得凭记忆手写这两类文件**——绕过 skill 就等于绕过写入判据。一条事实只存一处，不得复制到多处。

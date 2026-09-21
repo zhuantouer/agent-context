@@ -26,6 +26,10 @@ HOSTS = ("cursor", "codex", "codebuddy")
 # consistently, or links and recovery guidance drift apart.
 RESUME_SECTIONS = ("Objective", "Constraints", "Current State", "Next Check")
 HISTORY_SECTIONS = ("Milestones", "Deferred")
+# Goal lines that must not sit in Objective: still open (parallel or paused, with a
+# resume condition) versus closed (answered, judged negative or abandoned).
+OPEN_GOAL_SECTIONS = ("Other Goals",)
+CLOSED_GOAL_SECTIONS = ("Closed Questions",)
 
 
 def load(name):
@@ -164,7 +168,10 @@ class Contracts(ProjectCase):
         return skill.split("```markdown\n")[1:][index].split("```", 1)[0]
 
     def test_template_partitions_resume_and_history(self):
-        self.assertEqual(headings(self.template()), set(RESUME_SECTIONS) | set(HISTORY_SECTIONS))
+        self.assertEqual(
+            headings(self.template()),
+            set(RESUME_SECTIONS) | set(HISTORY_SECTIONS) | set(OPEN_GOAL_SECTIONS) | set(CLOSED_GOAL_SECTIONS),
+        )
 
     def test_daily_template_is_evidence_not_a_second_state_map(self):
         skill = PROGRESS_SKILL.read_text(encoding="utf-8")

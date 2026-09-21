@@ -33,6 +33,7 @@ description: 初始化和维护 `.agent-context/` 里的知识类文件（结构
 
 - 有 git：用 `git diff --name-only HEAD` 或 `git status --porcelain`；先确认可选的历史引用是否有效。
 - 无 git：比较相关文件与已知 context，并标注不确定性；只在缺失的选择会影响工作时才问。
+- **目标漂移**：`PROGRESS.md` 的 `## Objective` 若与用户当前问的问题不一致，说明状态已被落下。**不要在这里改状态文件**——加载 `update-progress` 覆盖式改写 Objective（切走未结案的线进 `## Other Goals`），并向用户说明"当前目标已变，地图已同步"。
 
 ## What to fill in
 
@@ -42,7 +43,7 @@ description: 初始化和维护 `.agent-context/` 里的知识类文件（结构
 - `COMMANDS.md`：setup/dev/test/lint/type/build/deploy 命令、validation profile、脚本、命令注意事项。
 - `CONFIG.md`：环境变量名、密钥位置、依赖服务、本地搭建；不写 secret 值。
 - `CONVENTIONS.md`：代码风格、偏好、边界、review 习惯、术语；模块化习惯：一个文件一个职责、按职责而非长度拆分、依赖单向、不过度碎片化。
-- `PROGRESS.md`：用 `update-progress` 建地图。目标与验收标准从对话中提取（推断的标 assumption），产出形态未定时先记当前子目标。
+- `PROGRESS.md`：**状态类，归 `update-progress`**，本 skill 不改它。目标与验收标准从对话中提取（推断的标 assumption），产出形态未定时先记当前子目标；Objective 是活字段，只允许覆盖（其余目标线归 `## Other Goals`）。
 - `MEMORY.md`：决策、经验教训与纠正性指引、跨任务的 open question。
 
 ## Rules
