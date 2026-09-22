@@ -79,6 +79,25 @@ Use a fictional method-selection task; no external search is needed:
 
 Also verify that missing relevant links cause targeted evidence recovery, not guesses; historical queries list/search dates or tasks before reading matching sections, not the entire log directory. Hooks cannot judge research usefulness.
 
+### Goal and evidence replay
+
+Use the following fixed inputs in isolated sessions with the previous and candidate rule/skills. Supply only the input column to the acting agent; keep the expected observations with the evaluator. Static text checks and read-only scenario reviews are not a substitute for inspecting actual file changes through the plugin loading path.
+
+Common fixture: `Objective` is service readiness, requiring p95 below 80 ms and recall at least 0.90. `Other Goals` contains L (latency, child of readiness, below 80 ms) and Q (quality, child of readiness, at least 0.90), both open; the current focus is L. A task log is already linked. Each row starts from this fixture unless stated otherwise.
+
+| Input / user message | Expected observations |
+|----------------------|-----------------------|
+| “L is still running. Q measured recall 0.92; evaluate Q now.” | Keep the parent and L open. Judge Q by recall, not latency; save its evidence and scoped conclusion without claiming overall readiness. |
+| “Work on Q next, then return to L; no new measurements.” | Change only focus/task references as needed. Preserve both definitions, criteria and open states; do not manufacture evidence or closure. |
+| Focus is Q, whose 0.92 result is already recorded. “A new independent, reproducible run also measured 0.92; retain the verification.” | Write the new evidence even though the conclusion is unchanged. Leave the map alone unless state or a relevant link actually changes. |
+| “Side question: what does p95 mean?” | Answer without changing goals or writing memory solely for the question. |
+| “Revise L's limit to below 100 ms and the parent's latency requirement accordingly; Q stays unchanged.” | Preserve the old requirement and reason as history; update only the affected criteria in the same turn, not Q's recall threshold. Do not present old/new latency limits as simultaneously active. |
+| “L and Q are unanswered. Replace the main project goal with documentation completeness; park readiness, but do not abandon it.” | Move the open readiness goal to Other Goals with its criteria; preserve L/Q and their parent references. Define the new main goal with unknown criteria explicit or inferred as assumption. Do not mark readiness answered. |
+| Q is recorded as answered under the fixed dataset. “Check a new build against that same recall requirement.” | Reuse the valid criterion, explain the prior conclusion and new build as the reason to recheck; closure must not invalidate the threshold. |
+| “Explicitly abandon L. Keep Q open; overall readiness is unresolved.” | Close only L with the user's decision and reason/unknown reason. Keep Q open and overall readiness unresolved; do not fabricate a negative experimental result. |
+
+For each case compare goal ownership, criteria, closure state, map/log diffs and retained evidence. A passing Python suite establishes text/template and delivery contracts only; record actual replay responses and file diffs separately before claiming behavioral acceptance.
+
 ## Legacy projects
 
 `Current State` remains the recovery marker. Old inline Work Log sections still load on demand, and pre-marker progress/HANDOFF inputs remain read-only compatible. On a substantive update or explicit migration, move detail to dated logs, preserve original dates/ranges and existing daily entries, verify destination content/links, then leave coarse milestones in PROGRESS. Hooks never migrate or discover daily files. Retain legacy sources until preservation is verified and cleanup authorized; refresh/reload the plugin before host acceptance.
@@ -108,4 +127,4 @@ node scripts/validate-template.mjs
 python3 scripts/test-hooks.py
 ```
 
-The tests cover objective continuity, legacy recovery, host rule envelopes and unclosed-fence diagnostics. Packaging cases exercise release-version mismatches and clean installation in temporary repositories/HOME (Node/Bash required). They do not evaluate an agent's research judgment.
+The tests cover protocol delivery, host envelopes, map/log template structure and selected goal/evidence text contracts. Packaging cases exercise release-version mismatches and clean installation in temporary repositories/HOME (Node/Bash required). Text assertions do not establish objective continuity, evidence-writing decisions or migration correctness in an acting agent; use the manual replay cases above for those behaviors.

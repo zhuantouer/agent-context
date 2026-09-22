@@ -26,8 +26,8 @@ HOSTS = ("cursor", "codex", "codebuddy")
 # consistently, or links and recovery guidance drift apart.
 RESUME_SECTIONS = ("Objective", "Constraints", "Current State", "Next Check")
 HISTORY_SECTIONS = ("Milestones", "Deferred")
-# Goal lines that must not sit in Objective: still open (parallel or paused, with a
-# resume condition) versus closed (answered, judged negative or abandoned).
+# Objective owns the primary goal; parallel goals and subgoals retain their own
+# criteria. Switching focus does not close them.
 OPEN_GOAL_SECTIONS = ("Other Goals",)
 CLOSED_GOAL_SECTIONS = ("Closed Questions",)
 
@@ -180,6 +180,34 @@ class Contracts(ProjectCase):
         self.assertTrue(daily.startswith("# Work Log — YYYY-MM-DD"))
         self.assertIn("## Pilot", daily)
         self.assertTrue(headings(daily).isdisjoint(RESUME_SECTIONS))
+
+    def test_parallel_goal_template_keeps_ownership_and_acceptance(self):
+        section = self.template().split("## Other Goals\n", 1)[1].split("\n## ", 1)[0]
+        for field in ("所属", "验收标准", "状态", "链接"):
+            with self.subTest(field=field):
+                self.assertIn(field, section)
+
+    def test_closed_question_template_does_not_equate_switching_with_closure(self):
+        section = self.template().split("## Closed Questions\n", 1)[1].split("\n## ", 1)[0]
+        self.assertNotIn("被取代", section)
+        self.assertIn("明确放弃", section)
+        self.assertIn("适用条件", section)
+        self.assertIn("所属目标", section)
+        self.assertIn("有效验收标准", section)
+
+    def test_progress_instructions_do_not_skip_evidence_on_unchanged_state(self):
+        skill = PROGRESS_SKILL.read_text(encoding="utf-8")
+        instructions = skill.split("## Instructions\n", 1)[1].split("\n## ", 1)[0]
+        self.assertNotIn("状态未变则不写文件", instructions)
+        self.assertNotIn("无新结论的重复检查", skill)
+        self.assertIn("独立判断", instructions)
+        self.assertIn("worklog", instructions)
+        self.assertIn("PROGRESS.md", instructions)
+
+    def test_compactness_rule_targets_the_map_not_the_archive(self):
+        memory = RULE.read_text(encoding="utf-8").split("## Project Memory\n", 1)[1]
+        self.assertNotIn("`.agent-context/` 要短到", memory)
+        self.assertIn("`PROGRESS.md` 要短到", memory)
 
     def test_protocol_tells_the_agent_to_read_the_record_itself(self):
         body = RULE.read_text(encoding="utf-8")
