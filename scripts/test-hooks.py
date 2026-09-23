@@ -244,6 +244,85 @@ class Contracts(ProjectCase):
         approx_tokens = (len(sc.build_message("codex").encode("utf-8")) + 3) // 4
         self.assertLessEqual(approx_tokens, limit)
 
+    def test_every_skill_is_registered_where_the_host_needs_it(self):
+        # Cursor and Codex point at the skills directory, but CodeBuddy lists each
+        # SKILL.md explicitly: an unregistered skill silently never loads there.
+        manifest = json.loads(
+            (PLUGIN / ".codebuddy-plugin" / "plugin.json").read_text(encoding="utf-8")
+        )
+        listed = set(manifest["skills"])
+        for skill in sorted(p for p in (PLUGIN / "skills").iterdir() if p.is_dir()):
+            self.assertIn(f"./skills/{skill.name}/SKILL.md", listed, skill.name)
+
+    def test_inference_clauses_stay_domain_neutral(self):
+        # The clauses exist because a research incident, but they must read for
+        # software/experience/ops work too: no domain vocabulary in the always-on rule.
+        body = RULE.read_text(encoding="utf-8")
+        for clause in (
+            "未检出差异不是等价",
+            "重复现象不是根因",
+            "证据不足写未分辨",
+            "先核对自己传入的标识",
+            "不得比来源证据更确定",
+        ):
+            self.assertIn(clause, body, clause)
+        for domain_specific in ("seed", "p 值", "AUC", "baseline", "Bonferroni"):
+            self.assertNotIn(domain_specific, body, domain_specific)
+
+    def test_review_is_risk_triggered_and_not_self_certifying(self):
+        skill = (PLUGIN / "skills" / "run-review" / "SKILL.md").read_text(encoding="utf-8")
+        # Reviewing a summary only proves internal consistency; the incident that
+        # motivated this skill was lost detail between artifact and summary.
+        self.assertIn("不得只给结论摘要", skill)
+        # A gate with no off-condition turns into ceremony, which the lightweight
+        # boundary in CONVENTIONS.md forbids.
+        self.assertIn("## Gates", skill)
+        self.assertIn("### 不触发", skill)
+        # "It was reviewed" is not a finding.
+        self.assertIn("不能作为结论成立的证据", skill)
+        self.assertIn("未检查项", skill)
+        self.assertIn("run-review", RULE.read_text(encoding="utf-8"))
+
+    def test_review_reaches_dispatch_and_closure_not_just_preparation(self):
+        # Preparing a briefing is not a review: the skill must carry the whole
+        # run, and must say what happens when the host cannot delegate at all.
+        skill = (PLUGIN / "skills" / "run-review" / "SKILL.md").read_text(encoding="utf-8")
+        body = RULE.read_text(encoding="utf-8")
+        for step in ("实际派出", "取得报告", "未独立复核", "不得用自查冒充"):
+            self.assertIn(step, skill, step)
+        # A reviewer who cannot judge against the goal can only check internal
+        # consistency, and an unbounded reviewer chain is a cost defect.
+        self.assertIn("目标与验收标准", skill)
+        self.assertIn("复核者不再往下派复核者", skill)
+        # Adopting a finding is not resolving it.
+        self.assertIn("## 修复与关闭", skill)
+        self.assertIn("已采纳", skill)
+        self.assertIn("宿主支持委派时实际派出", body)
+
+    def test_prior_authorization_does_not_retire_the_pre_execution_gate(self):
+        # A plan approved but not yet executed was the recorded gap: an agent could
+        # decide the "before approval" moment had passed and skip straight to a
+        # post-hoc check, which cannot undo spend or irreversible effects.
+        skill = (PLUGIN / "skills" / "run-review" / "SKILL.md").read_text(encoding="utf-8")
+        gates = skill.split("## Gates", 1)[1].split("## ", 1)[0]
+        self.assertNotIn("方案获批前", gates)
+        self.assertIn("执行开始前", gates)
+        self.assertIn("用户已授权也适用", gates)
+        self.assertIn("G3 不能替代必要的 G1", gates)
+        # The cheapness ranking is reasoning, not a measurement, and must say so.
+        self.assertIn("未实测", gates)
+        self.assertIn("用户已授权不替代复核", RULE.read_text(encoding="utf-8"))
+
+    def test_retraction_does_not_require_proving_the_opposite(self):
+        # Symmetric evidence for a retraction would freeze a known-bad claim in
+        # place; withdrawing an unsupported claim and asserting its negation are
+        # different acts. Equally, a failed call must stay recordable as unknown.
+        body = RULE.read_text(encoding="utf-8")
+        self.assertIn("原据不成立即可撤回", body)
+        self.assertIn("断言反面结论要有新证据", body)
+        self.assertNotIn("撤回与降级同样是结论，需同等证据", body)
+        self.assertIn("原因未知", body)
+
     def test_retired_workflow_is_not_advertised(self):
         self.assertFalse((PLUGIN / "skills" / "handoff").exists())
         surfaces = list((PLUGIN / "skills").rglob("*.md")) + [REPO_ROOT / "README.md", PLUGIN / "README.md"]

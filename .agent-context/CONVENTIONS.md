@@ -16,7 +16,7 @@
 - `PROGRESS.md` is the sole current-state map: goal, now, coarse milestones and a few relevant links. Detailed work belongs in `worklog/YYYY-MM-DD.md`. Resume by task, not yesterday's date; no empty daily files or copied handoffs.
 - Never store secret values in `.agent-context/CONFIG.md`.
 - Keep behavioral guidance lightweight; avoid turning the plugin into a heavy workflow framework.
-- Do not reintroduce cross-model review as a core plugin capability.
+- Independent review **is** a core capability since 2026-09-23 (`run-review`), overturning the earlier ban on review as a plugin feature. Reviewers receive raw artifacts, not the acting agent's summary; findings are adjudicated item by item. Gates trigger by risk, never as mandatory ceremony — this is the boundary that keeps the previous "no heavy workflow" constraint intact. Subagent review is the default vehicle; the plugin still does not orchestrate multiple models or vendors.
 
 ## Review and Validation Habits
 - Run `node scripts/validate-template.mjs` for plugin structure changes.

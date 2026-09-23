@@ -26,7 +26,8 @@
   "category": "Productivity",
   "skills": [
     "./skills/bootstrap-context/SKILL.md",
-    "./skills/update-progress/SKILL.md"
+    "./skills/update-progress/SKILL.md",
+    "./skills/run-review/SKILL.md"
   ],
   "hooks": "./hooks/codebuddy-hooks.json"
 }

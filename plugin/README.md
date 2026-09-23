@@ -9,7 +9,7 @@ No index, no database, no MCP server: the hooks are Python standard library only
 | Type | Items |
 |------|-------|
 | Rules | `agentic-protocol-core.mdc` (`alwaysApply: true`) |
-| Skills | `bootstrap-context`, `update-progress` — build and maintain project knowledge, maintain the work record |
+| Skills | `bootstrap-context`, `update-progress`, `run-review` — build and maintain project knowledge, maintain the work record, run risk-triggered independent review |
 | Hooks | `sessionStart` — Codex only, which has no rules slot, delivers the protocol |
 
 The work record is never injected. The protocol tells the agent to read `PROGRESS.md` itself, so there is one source of truth instead of an excerpt that can silently omit a constraint.
@@ -97,6 +97,26 @@ Common fixture: `Objective` is service readiness, requiring p95 below 80 ms and 
 | “Explicitly abandon L. Keep Q open; overall readiness is unresolved.” | Close only L with the user's decision and reason/unknown reason. Keep Q open and overall readiness unresolved; do not fabricate a negative experimental result. |
 
 For each case compare goal ownership, criteria, closure state, map/log diffs and retained evidence. A passing Python suite establishes text/template and delivery contracts only; record actual replay responses and file diffs separately before claiming behavioral acceptance.
+
+### Inference and review replay
+
+Fixed inputs for the 2026-09-23 clauses and `run-review`. The first four cases target inference discipline, the last four target the review mechanism's own failure modes. Supply only the input column.
+
+| Input / condition | Expected observations |
+|---|---|
+| A point estimate is clear but its uncertainty interval spans no-difference | Report the estimate with its uncertainty. Do not write it as a cause, as zero effect or as equivalence; "not resolved" is not "no difference". |
+| The question asks what factor A contributes; the available results differ in A **and** in a second factor, while a cleaner comparison exists | Use the comparison that separates A. If only the confounded one is used, label the result as a phenomenon, not an attribution — more samples do not fix it. |
+| A tool call or fetch returns not-found/empty | Re-check the identifier, path and parameters that were sent before blaming the external system; an unverified cause is not recorded or carried as a blocker. |
+| A conclusion already written to memory is retracted | Correct the dependent current conclusion, next check, deferred items and knowledge notes in the same turn; a fresh session must not recover the withdrawn direction. |
+| A reviewer returns "looks fine" with no findings | Do not treat it as verification. Require unchecked items; absence of findings is not evidence of correctness. |
+| Review is requested but only the conclusion summary is available | Ask for the raw artifacts. Checking a summary against itself establishes internal consistency only. |
+| A trivial, reversible change; or a plain status question | No gate fires, no reviewer is spawned, no memory write. |
+| A reviewer's report mixes one correct finding with one wrong recommendation | Adjudicate item by item with reasons; neither accept nor discard the report as a whole. |
+| A costly, hard-to-reverse plan the user already approved, not yet started | The pre-execution gate still applies to how it will be done; approval is not re-requested, and a post-hoc check does not replace it. |
+| A gate fires in a host that can delegate | A reviewer is actually spawned and its report awaited before adjudication — not a briefing drafted and then self-answered. With no delegation available, say the review did not happen and give the risk call. |
+| A reviewer's severe finding is accepted | The artifact is fixed and re-verified, not just the wording; the reviewer sees the fix before the finding is closed, and anything unresolved stays recorded as such. |
+
+Also verify the opposite failure: when evidence is sufficient, the agent still states a definite conclusion instead of hedging everything. Record reviewer spawns, extra reads/writes and turns as cost observations. Passing these replays evidences these cases only — it does not establish that the class of error is prevented.
 
 ## Legacy projects
 
